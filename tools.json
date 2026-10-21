@@ -104,7 +104,7 @@
       "name": "Spectrum Earth",
       "kind": "streamlit",
       "url": "https://spectrum-earth.streamlit.app/",
-      "summary": "Signal analysis for landforms, including volcano shapes from elevation profiles.",
+      "summary": "Landform and shape analysis from elevation profiles: valley cross-sections, river long profiles and volcano shapes.",
       "topics": [
         "Volcanoes",
         "Landforms"
