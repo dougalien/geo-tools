@@ -1,0 +1,3 @@
+[build]
+  command = "node scripts/build-redirects.mjs"
+  publish = "."

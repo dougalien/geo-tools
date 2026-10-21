@@ -1,0 +1,2032 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solar System Adventure</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #05060f; --panel: #10142a; --panel2: #171c38; --ink: #eef1ff; --muted: #a9b0d6; --line: #2c3463;
+  --accent: #ffb547; --blue: #5aa9ff; --good: #3fd28b; --bad: #ff7a7a; --focus: #ffe066;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
+button, select { font: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+kbd { display: inline-block; min-width: 1.5em; padding: 0 .35em; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; background: var(--panel2); font: 600 .85em/1.5 ui-monospace, Consolas, monospace; text-align: center; color: var(--ink); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.screen { position: fixed; inset: 0; display: none; }
+.screen.on { display: block; }
+.btn { background: var(--panel2); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: .55em 1em; }
+.btn:hover { border-color: var(--blue); }
+.btn.primary { background: var(--accent); color: #1a1205; border-color: var(--accent); font-weight: 700; }
+.btn.small { padding: .3em .7em; font-size: .9em; }
+a { color: var(--blue); }
+
+/* title */
+#title { background: radial-gradient(ellipse at 70% 30%, #23306b 0%, #0a0d22 45%, #03040a 100%); }
+#titleStars { position: absolute; inset: 0; width: 100%; height: 100%; }
+.title-card { position: relative; max-width: 640px; margin: 12vh auto 0; padding: 0 16px; text-align: center; }
+.title-card h1 { font-size: clamp(2.3rem, 7vw, 4.2rem); margin: 0; letter-spacing: .02em; line-height: 1.05;
+  background: linear-gradient(90deg, #ffd27a, #ff9f5a 40%, #8fc6ff 75%, #c9a6ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.title-card .by { color: var(--muted); margin: .4em 0 1.6em; font-size: 1.1rem; }
+.title-card p.tag { font-size: 1.1rem; margin: 0 auto 1.8em; max-width: 34em; }
+.title-card .btn.primary { font-size: 1.3rem; padding: .7em 1.8em; border-radius: 14px; }
+.title-row { margin-top: 1.4em; display: flex; gap: .6em; justify-content: center; flex-wrap: wrap; }
+
+/* map */
+#map { background: radial-gradient(ellipse at 0% 50%, #3a2408 0%, #0a0c1d 35%, #04050c 100%); overflow: auto; }
+.map-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 340px; min-height: 100%; }
+.map-main { padding: 14px 16px; min-width: 0; }
+.map-main h2 { margin: 0; font-size: 1.4rem; }
+.map-main .sub { color: var(--muted); margin: .2em 0 .6em; }
+#mapSvg { width: 100%; height: auto; display: block; max-height: calc(100vh - 120px); }
+#mapSvg .stop { cursor: pointer; }
+#mapSvg .stop:focus { outline: none; }
+#mapSvg .stop:focus .ring, #mapSvg .stop:hover .ring { stroke: var(--focus); stroke-width: 3; }
+#mapSvg text { fill: var(--ink); font: 600 15px system-ui, sans-serif; pointer-events: none; }
+#mapSvg text.small { font-size: 12px; fill: var(--muted); font-weight: 500; }
+.map-side { background: rgba(16, 20, 42, .92); border-left: 1px solid var(--line); padding: 14px 16px; overflow: auto; max-height: 100vh; }
+.map-side h3 { margin: 1em 0 .4em; font-size: 1rem; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; }
+.map-side h3:first-child { margin-top: 0; }
+.score-big { font-size: 1.6rem; font-weight: 800; }
+#stopInfo { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: .7em .8em; min-height: 6em; }
+#stopInfo b { color: var(--accent); }
+.legend { display: grid; gap: .25em; font-size: .9em; color: var(--muted); }
+.legend span::before { content: ''; display: inline-block; width: .8em; height: .8em; border-radius: 50%; margin-right: .45em; vertical-align: -1px; }
+.legend .l0::before { background: #ff9a2e; } .legend .l1::before { background: var(--blue); } .legend .l2::before { background: var(--good); }
+.set-row { display: flex; flex-wrap: wrap; gap: .4em; align-items: center; margin: .35em 0; }
+.set-row label { color: var(--muted); font-size: .9em; }
+select { background: var(--panel2); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: .3em .4em; max-width: 100%; }
+#voiceStatus { color: var(--accent); font-size: .9em; }
+.stop-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.stop-list button { width: 100%; text-align: left; background: transparent; color: var(--ink); border: 0; border-radius: 6px; padding: .25em .4em; display: flex; justify-content: space-between; gap: .5em; }
+.stop-list button:hover { background: var(--panel2); }
+.stop-list .st { color: var(--muted); font-size: .85em; white-space: nowrap; }
+.stop-list .st.done { color: var(--good); }
+.stop-list .st.part { color: var(--blue); }
+@media (max-width: 860px) { .map-wrap { grid-template-columns: 1fr; } .map-side { border-left: 0; border-top: 1px solid var(--line); max-height: none; } #mapSvg { max-height: none; } }
+
+/* travel */
+#travel { background: #000; }
+#warp { position: absolute; inset: 0; width: 100%; height: 100%; }
+.travel-text { position: absolute; left: 0; right: 0; bottom: 14vh; text-align: center; padding: 0 16px; text-shadow: 0 2px 8px #000; }
+.travel-text h2 { font-size: clamp(1.6rem, 5vw, 2.6rem); margin: 0 0 .2em; }
+.travel-text p { margin: .2em auto; max-width: 36em; color: #dfe4ff; }
+
+/* world */
+#world canvas#gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hud { position: absolute; z-index: 5; }
+#hudTop { top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; pointer-events: none; flex-wrap: wrap; }
+#hudTop > * { pointer-events: auto; }
+.chip { background: rgba(10, 13, 30, .78); border: 1px solid var(--line); border-radius: 10px; padding: .4em .7em; backdrop-filter: blur(4px); }
+#hudName b { font-size: 1.15rem; }
+#hudName .k { color: var(--muted); font-size: .85em; }
+.hud-buttons { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.hud-buttons .btn { background: rgba(10, 13, 30, .8); padding: .35em .7em; font-size: .92em; }
+#toolBar { left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; max-width: calc(100% - 20px); }
+.tool { display: flex; align-items: center; gap: .4em; background: rgba(10, 13, 30, .85); color: var(--ink); border: 2px solid #ff9a2e; border-radius: 12px; padding: .35em .7em; }
+.tool .n { font-weight: 800; }
+.tool.done { border-color: var(--good); }
+.tool.done .n::after { content: ' ✓'; color: var(--good); }
+.tool.assess { border-color: var(--accent); background: rgba(60, 40, 5, .9); font-weight: 700; }
+.tool.assess.done { border-color: var(--good); background: rgba(10, 40, 25, .9); }
+#prompt { left: 50%; bottom: 78px; transform: translateX(-50%); text-align: center; pointer-events: none; }
+#cross { left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; pointer-events: none; }
+#cross::before, #cross::after { content: ''; position: absolute; background: rgba(255, 255, 255, .8); }
+#cross::before { left: 6px; top: 0; width: 2px; height: 14px; } #cross::after { top: 6px; left: 0; height: 2px; width: 14px; }
+#lookHint { left: 50%; top: 58%; transform: translateX(-50%); pointer-events: none; text-align: center; color: #fff; text-shadow: 0 1px 4px #000; font-size: .95em; }
+#toast { left: 50%; top: 70px; transform: translateX(-50%); text-align: center; pointer-events: none; transition: opacity .4s; max-width: 90vw; }
+#caption { position: fixed; z-index: 30; left: 50%; bottom: 120px; transform: translateX(-50%); max-width: min(760px, 92vw); background: rgba(0, 0, 0, .82); color: #fff; border-radius: 10px; padding: .55em .9em; font-size: 1.02rem; text-align: center; pointer-events: none; }
+#award { position: fixed; z-index: 40; right: 16px; top: 70px; background: linear-gradient(135deg, #3a2a05, #1b1430); border: 2px solid var(--accent); border-radius: 14px; padding: .7em 1em; max-width: 300px; transition: transform .4s, opacity .4s; }
+#award.hide { transform: translateX(120%); opacity: 0; }
+@media (max-width: 600px) { #award { top: auto; bottom: 12px; left: 12px; right: 12px; max-width: none; } #caption { bottom: 150px; } }
+
+/* modals */
+.modal { position: fixed; inset: 0; z-index: 20; background: rgba(2, 3, 10, .6); display: none; align-items: center; justify-content: center; padding: 16px; }
+.modal.on { display: flex; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; width: min(760px, 100%); max-height: calc(100vh - 32px); overflow: auto; padding: 18px 20px; box-shadow: 0 20px 60px rgba(0, 0, 0, .6); }
+.card h2 { margin: 0 0 .3em; font-size: 1.35rem; }
+.card .tool-name { color: var(--accent); text-transform: uppercase; letter-spacing: .08em; font-size: .85em; font-weight: 700; }
+.reading { background: #070a18; border: 1px solid #2a3a70; border-left: 4px solid var(--blue); border-radius: 10px; padding: .7em .9em; margin: .6em 0 .9em; font-family: ui-monospace, Consolas, monospace; font-size: .95rem; }
+.reading b { color: #9fd0ff; }
+.q { font-weight: 700; font-size: 1.08rem; margin: .4em 0 .6em; }
+.opts { display: grid; gap: 8px; }
+.opt { text-align: left; background: var(--panel2); color: var(--ink); border: 2px solid var(--line); border-radius: 10px; padding: .55em .8em; display: flex; gap: .6em; align-items: baseline; }
+.opt:hover { border-color: var(--blue); }
+.opt .k { font-weight: 800; color: var(--accent); }
+.opt.right { border-color: var(--good); background: #0f2b20; }
+.opt.wrong { border-color: var(--bad); opacity: .65; }
+.feedback { min-height: 1.4em; margin: .7em 0 0; }
+.feedback.good { color: var(--good); } .feedback.bad { color: var(--bad); }
+.card-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1em; flex-wrap: wrap; }
+.close-x { float: right; background: transparent; border: 0; color: var(--muted); font-size: 1.4rem; line-height: 1; }
+.ing { border: 1px solid var(--line); border-radius: 12px; padding: .6em .8em; margin: .55em 0; }
+.ing h4 { margin: 0 0 .1em; }
+.ing .d { color: var(--muted); font-size: .9em; margin-bottom: .4em; }
+.seg { display: flex; gap: 6px; flex-wrap: wrap; }
+.seg button { background: var(--panel2); color: var(--ink); border: 2px solid var(--line); border-radius: 999px; padding: .3em .9em; }
+.seg button[aria-pressed="true"] { border-color: var(--accent); background: #3a2a08; font-weight: 700; }
+.seg.rate button { border-radius: 10px; text-align: left; }
+.seg.rate button small { display: block; color: var(--muted); font-weight: 400; }
+.verdict { margin-top: .4em; font-size: .95em; }
+.verdict.good { color: var(--good); } .verdict.ok { color: var(--accent); } .verdict.bad { color: var(--bad); }
+.evidence { background: #0a0e22; border-radius: 10px; padding: .5em .8em; margin: .4em 0 .6em; font-size: .92em; }
+.evidence li { margin: .25em 0; }
+.log-world { border-bottom: 1px solid var(--line); padding: .5em 0; }
+.log-world h3 { margin: .2em 0; font-size: 1.05rem; }
+.log-world ul { margin: .2em 0; padding-left: 1.2em; font-size: .93em; }
+.awards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.aw { border: 1px solid var(--line); border-radius: 12px; padding: .5em .7em; opacity: .5; }
+.aw.got { opacity: 1; border-color: var(--accent); background: #221a08; }
+.aw .i { font-size: 1.5em; }
+table.report { width: 100%; border-collapse: collapse; font-size: .93em; }
+table.report th, table.report td { border-bottom: 1px solid var(--line); padding: .35em .4em; text-align: left; }
+.help-grid { display: grid; grid-template-columns: auto 1fr; gap: .35em .9em; align-items: baseline; }
+</style>
+</head>
+<body>
+<div id="sr" class="sr-only" aria-live="polite"></div>
+<div id="caption" hidden></div>
+<div id="award" class="hide" role="status" aria-live="polite"></div>
+
+<!-- Title -->
+<section id="title" class="screen on" aria-label="Title screen">
+  <canvas id="titleStars" aria-hidden="true"></canvas>
+  <div class="title-card">
+    <h1>Solar System Adventure</h1>
+    <div class="by">by Dougalien Systems</div>
+    <p class="tag">Fly from the Sun out to Pluto with PEBBLES, your slightly sarcastic ship computer. At each stop, use four instruments to gather the facts, then decide for yourself: could anything live here?</p>
+    <button id="startBtn" class="btn primary">Start here</button>
+    <div class="title-row">
+      <button class="btn voice-toggle" id="voiceTitle" aria-pressed="false">Turn on voice narration</button>
+      <button class="btn" id="helpTitle">How to play</button>
+    </div>
+  </div>
+</section>
+
+<!-- Map -->
+<section id="map" class="screen" aria-label="Solar system map">
+  <div class="map-wrap">
+    <div class="map-main">
+      <h2>Flight plan</h2>
+      <div class="sub">Pick a stop to travel there. Not sure where to start? Try Earth to calibrate your instruments.</div>
+      <svg id="mapSvg" viewBox="0 0 1080 560" role="group" aria-label="Solar system stops"></svg>
+    </div>
+    <aside class="map-side">
+      <h3>Score</h3>
+      <div><span class="score-big" id="mapScore">0</span> points · <span id="mapAwards">0</span> of <span id="awardTotal">20</span> awards</div>
+      <div class="set-row" style="margin-top:.5em">
+        <button class="btn small" id="logBtnMap">Mission log</button>
+        <button class="btn small" id="awardsBtnMap">Awards</button>
+        <button class="btn small" id="reportBtnMap">Mission report</button>
+        <button class="btn small" id="sourcesBtnMap">NASA sources</button>
+        <button class="btn small" id="helpBtnMap">How to play</button>
+      </div>
+      <h3>Selected stop</h3>
+      <div id="stopInfo" aria-live="polite">Hover over or Tab to a stop to see details.</div>
+      <div class="legend" style="margin-top:.5em"><span class="l0">Not started</span><span class="l1">Some instruments used</span><span class="l2">Life assessment done</span></div>
+      <h3>All stops</h3>
+      <ul class="stop-list" id="stopList"></ul>
+      <p style="color:var(--muted);font-size:.9em">Coming next: <span id="nextStops"></span>.</p>
+      <h3>Settings</h3>
+      <div class="set-row"><button class="btn small voice-toggle" id="voiceMap" aria-pressed="false">Voice narration: off</button><button class="btn small" id="voiceTest" hidden>Test voice</button></div>
+      <div class="set-row"><label for="voiceRate">Reading speed</label>
+        <select id="voiceRate"><option value="0.8">Slow</option><option value="0.9">A little slow</option><option value="1">Normal</option><option value="1.15">A little fast</option><option value="1.3">Fast</option></select></div>
+      <div class="set-row" id="voicePickRow" hidden><label for="voicePick">Reading voice</label><select id="voicePick"></select></div>
+      <div id="voiceStatus" hidden></div>
+      <div class="set-row"><button class="btn small" id="sfxBtn" aria-pressed="true">Sound effects: on</button><button class="btn small" id="musicBtn" aria-pressed="true">Music: on</button></div>
+      <div class="set-row"><label for="lookSpeed">Mouse look speed</label>
+        <select id="lookSpeed"><option value="0.6">Slow</option><option value="1">Normal</option><option value="1.5">Fast</option></select></div>
+      <div class="set-row"><label for="gfxMode">Graphics</label>
+        <select id="gfxMode"><option value="fast">Fast (older laptops)</option><option value="normal">Normal</option><option value="sharp">Sharp (powerful computers)</option></select></div>
+      <div class="set-row"><button class="btn small" id="freshBtn">Start fresh</button></div>
+    </aside>
+  </div>
+</section>
+
+<!-- Travel -->
+<section id="travel" class="screen" aria-label="Traveling" aria-live="polite">
+  <canvas id="warp" aria-hidden="true"></canvas>
+  <div class="travel-text"><h2 id="travelTo"></h2><p id="travelFact"></p><p style="color:var(--muted);font-size:.9em">Press <kbd>Enter</kbd> to skip</p></div>
+</section>
+
+<!-- World -->
+<section id="world" class="screen" aria-label="Exploring">
+  <canvas id="gl" tabindex="0" aria-label="3D view. Use W A S D to move, the mouse or arrow keys to look, number keys to walk to an instrument."></canvas>
+  <div id="hudTop" class="hud">
+    <div class="chip" id="hudName"></div>
+    <div class="hud-buttons">
+      <span class="chip"><b id="hudScore">0</b> pts</span>
+      <button class="btn" id="mapBtn"><kbd>M</kbd> Map</button>
+      <button class="btn" id="logBtn"><kbd>L</kbd> Log</button>
+      <button class="btn" id="awardsBtn"><kbd>B</kbd> Awards</button>
+      <button class="btn voice-toggle" id="voiceHud" aria-pressed="false"><kbd>V</kbd> Voice off</button>
+      <button class="btn" id="helpBtn"><kbd>H</kbd> Help</button>
+    </div>
+  </div>
+  <div id="cross" class="hud" aria-hidden="true"></div>
+  <div id="lookHint" class="hud chip">Click the view to look around with the mouse</div>
+  <div id="prompt" class="hud chip" hidden></div>
+  <div id="toast" class="hud chip" style="opacity:0" aria-hidden="true"></div>
+  <div id="toolBar" class="hud" role="toolbar" aria-label="Instruments"></div>
+</section>
+
+<!-- Modals -->
+<div class="modal" id="scanModal" role="dialog" aria-modal="true" aria-labelledby="scanTitle"><div class="card" id="scanCard"></div></div>
+<div class="modal" id="assessModal" role="dialog" aria-modal="true" aria-labelledby="assessTitle"><div class="card" id="assessCard"></div></div>
+<div class="modal" id="logModal" role="dialog" aria-modal="true" aria-labelledby="logTitle"><div class="card" id="logCard"></div></div>
+<div class="modal" id="awardsModal" role="dialog" aria-modal="true" aria-labelledby="awTitle"><div class="card" id="awardsCard"></div></div>
+<div class="modal" id="reportModal" role="dialog" aria-modal="true" aria-labelledby="repTitle"><div class="card" id="reportCard"></div></div>
+<div class="modal" id="sourcesModal" role="dialog" aria-modal="true" aria-labelledby="srcTitle"><div class="card" id="sourcesCard"></div></div>
+<div class="modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle"><div class="card">
+  <button class="close-x" data-close aria-label="Close">×</button>
+  <h2 id="helpTitle">How to play</h2>
+  <p>You are a junior astrobiologist. At each stop, use the four instruments to collect readings and answer a question about each one. Then judge NASA's three ingredients for life and rate the world. Your answers are compared with what NASA's pages say.</p>
+  <div class="help-grid">
+    <kbd>W A S D</kbd><span>Move (arrow keys work too)</span>
+    <span>Mouse</span><span>Click the view, then move the mouse to look. Press <kbd>Esc</kbd> to free the mouse. You can also drag to look.</span>
+    <kbd>1</kbd><span>to <kbd>4</kbd>: walk to an instrument and use it. While a question is open, the number keys pick an answer.</span>
+    <kbd>E</kbd><span>Use the instrument in front of you</span>
+    <kbd>5</kbd><span>When all four readings are in: open the life assessment. <kbd>N</kbd> walks to the next unused instrument.</span>
+    <kbd>Space</kbd><span>Jump (try it where gravity is low)</span>
+    <kbd>Shift</kbd><span>Run</span>
+    <kbd>M</kbd><span>Map · <kbd>L</kbd> mission log · <kbd>B</kbd> awards</span>
+    <kbd>V</kbd><span>Voice narration on or off · <kbd>R</kbd> repeat the last thing said</span>
+  </div>
+  <p>Points: 10 for each question on the first try (5 after a miss). In the life assessment, 5 for each ingredient and 15 for the overall rating.</p>
+  <div class="card-actions"><button class="btn primary" data-close>Got it</button></div>
+</div></div>
+
+<script src="three.min.js"></script>
+<script>if (!window.THREE) document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
+<script>
+/* ================= Worlds =================
+   Every reading below comes from NASA's science.nasa.gov pages listed in each world's `src`.
+   Each world has four instruments (air, surface, conditions, life scanner). Each instrument shows a reading and
+   asks the student to interpret it. After all four, the student judges NASA's three ingredients for life
+   (liquid water, chemical building blocks, energy) and rates the world's potential for life. */
+const TOOLS = ['Spectrometer', 'Rock drill', 'Thermo-barometer', 'Life scanner'];
+const DECK_TOOLS = ['Spectrometer', 'Cloud scoop', 'Thermo-barometer', 'Life scanner'];
+const RATINGS = [
+  { k: 'unlikely', label: 'Unlikely', d: 'Life as we know it could not survive here.' },
+  { k: 'worth', label: 'Worth a look', d: 'Some ingredients, a long shot, or signs of a better past.' },
+  { k: 'top', label: 'Top target', d: 'All three ingredients may be present today.' },
+  { k: 'confirmed', label: 'Life confirmed', d: 'We already know life lives here.' },
+];
+const INGREDIENTS = [
+  { k: 'water', label: 'Liquid water', d: 'Not ice or vapor: liquid, today or in the past.' },
+  { k: 'chem', label: 'Chemical building blocks', d: 'Carbon, hydrogen, nitrogen, oxygen, phosphorus, sulfur and the molecules made from them.' },
+  { k: 'energy', label: 'An energy source life could use', d: 'Sunlight, or chemical energy such as hot water reacting with rock.' },
+];
+
+const WORLDS = [
+{
+  id: 'sun', name: 'The Sun', kind: 'Star', au: 0, g: 274, deck: true, tools: ['Spectrometer', 'Plasma scoop', 'Thermo-probe', 'Life scanner'],
+  intro: `Welcome to the Sun, a 4.5 billion year old yellow dwarf star. Relax: PEBBLES has wrapped the science deck in a heat shield made of pure imagination. Please do not test it.`,
+  src: [['Sun: Facts', 'https://science.nasa.gov/sun/facts/']],
+  scans: [
+    { r: `Composition: a huge ball of <b>hydrogen and helium</b>, held together by its own gravity.`,
+      q: `NASA says one planet has an overall makeup similar to the Sun's. Which one?`, o: ['Jupiter', 'Mars', 'Earth', 'Mercury'], a: 0,
+      h: `Think of a world that is mostly hydrogen and helium gas.`, x: `Jupiter is mostly hydrogen and helium too. It just never got massive enough to become a star.` },
+    { r: `Visible surface (photosphere): about <b>5,500 °C</b> (10,000 °F).<br>Outer atmosphere (corona): up to <b>2 million °C</b> (3.5 million °F).`,
+      q: `Strange but true: which part of the Sun is hotter?`, o: ['The corona, its outer atmosphere', 'The photosphere, its visible surface', 'They are the same temperature'], a: 0,
+      h: `Compare the two numbers on the reading.`, x: `The corona is hundreds of times hotter than the surface below it, one of the Sun's great puzzles. Material leaving the corona at supersonic speeds becomes the solar wind.` },
+    { r: `Core temperature: about <b>15 million °C</b> (27 million °F). In the core, <b>hydrogen is fused to form helium</b>.`,
+      q: `What powers the Sun's heat and light?`, o: ['Nuclear fusion of hydrogen into helium', 'Burning, like a giant campfire', 'Radioactive uranium', 'Friction from spinning'], a: 0,
+      h: `Read the second sentence of the reading.`, x: `Fusion in the core powers the Sun. A campfire needs oxygen and would have burned out long ago.` },
+    { r: `Distance to Earth: about <b>150 million km</b> (93 million miles). Light covers that in about <b>8 minutes</b>.<br>NASA: the Sun could not harbor life because of its extreme temperatures and radiation, but life on Earth is only possible because of the Sun's light and energy.`,
+      q: `If the Sun switched off right now, how long before Earth went dark?`, o: ['About 8 minutes', 'Instantly', 'About a day', 'About a year'], a: 0,
+      h: `The last light to leave the Sun still has to travel to us.`, x: `Sunlight takes about 8 minutes to reach Earth, so we would see the Sun for 8 more minutes.` },
+  ],
+  life: { water: ['no'], chem: ['no', 'maybe'], energy: ['yes'], rating: 'unlikely', alt: [],
+    why: { water: `Far too hot for liquid water.`, chem: `It is too hot for complex molecules to hold together.`, energy: `Plenty! The Sun is the energy source for life on Earth.`,
+      rating: `NASA: "The Sun could not harbor life as we know it because of its extreme temperatures and radiation." Energy alone is not enough.` } },
+},
+{
+  id: 'mercury', name: 'Mercury', kind: 'Rocky planet', au: 0.39, g: 3.7, tools: TOOLS,
+  intro: `Mercury, the smallest planet and the closest to the Sun. Sunscreen is recommended. So is a sweater, for later.`,
+  src: [['Mercury: Facts', 'https://science.nasa.gov/mercury/facts/']],
+  scans: [
+    { r: `Mercury has no real atmosphere, only a thin <b>exosphere</b> of oxygen, sodium, hydrogen, helium and potassium atoms.`,
+      q: `With almost no air to hold heat, what happens to Mercury's temperature?`, o: ['Huge swings between day and night', 'It stays the same all day and night', 'It is always freezing'], a: 0,
+      h: `Air works like a blanket. What happens without a blanket?`, x: `Days reach 430 °C and nights drop to -180 °C, because there is no atmosphere to keep heat in.` },
+    { r: `Surface: heavily <b>cratered</b>, like Earth's Moon.<br>Core: a <b>metallic core</b> about 85% of the planet's radius.`,
+      q: `A core that takes up 85% of the radius means Mercury is mostly made of...`, o: ['Metal, mostly iron', 'Water ice', 'Hydrogen gas'], a: 0,
+      h: `The core is metallic.`, x: `Mercury is a dense, metal-rich world wrapped in a thin rocky shell.` },
+    { r: `Day: up to <b>430 °C</b> (800 °F). Night: down to <b>-180 °C</b> (-290 °F).<br>For comparison, Venus's surface is about <b>467 °C</b>.`,
+      q: `Mercury is closest to the Sun. Is it the hottest planet?`, o: ['No, Venus is hotter because its thick atmosphere traps heat', 'Yes, closest always means hottest', 'No, Earth is hotter'], a: 0,
+      h: `Compare 430 °C with Venus's number.`, x: `Venus beats Mercury thanks to a runaway greenhouse effect. Distance is not the whole story.` },
+    { r: `Mercury <b>may have water ice</b> at its north and south poles inside deep craters, but only in regions in <b>permanent shadow</b>.<br>NASA: Mercury's environment is not conducive to life as we know it.`,
+      q: `How could ice survive on the planet closest to the Sun?`, o: ['It hides in crater floors that never see sunlight', 'Mercury has cold oceans that refreeze it', 'The Sun is dim at Mercury'], a: 0,
+      h: `Look at where the ice is found.`, x: `Crater floors near the poles stay in permanent shadow, cold enough to keep ice for a very long time.` },
+  ],
+  life: { water: ['no'], chem: ['no', 'maybe'], energy: ['yes', 'maybe'], rating: 'unlikely', alt: [],
+    why: { water: `Only possible ice in shadowed craters. No liquid water.`, chem: `A few atoms in a thin exosphere and some ice, but little to work with.`, energy: `Lots of sunlight, often too much.`,
+      rating: `NASA: "Mercury's environment is not conducive to life as we know it."` } },
+},
+{
+  id: 'venus', name: 'Venus', kind: 'Rocky planet', au: 0.72, g: 8.87, tools: TOOLS,
+  intro: `Venus, Earth's cloudy twin with a terrible temper. PEBBLES reminds you not to lick the clouds.`,
+  src: [['Venus: Facts', 'https://science.nasa.gov/venus/venus-facts/']],
+  scans: [
+    { r: `Atmosphere: mostly <b>carbon dioxide</b>, which drives a runaway greenhouse effect.<br>Clouds: dense clouds of <b>sulfuric acid</b>.`,
+      q: `If it rained from Venus's clouds, what would fall?`, o: ['Sulfuric acid', 'Fresh water', 'Liquid methane'], a: 0,
+      h: `What are the clouds made of?`, x: `Sulfuric acid rain. It evaporates in the heat before reaching the ground.` },
+    { r: `Surface: <b>volcanoes and deformed mountains</b> hidden beneath the clouds.<br>Venus spins <b>backward</b> compared to Earth, so the Sun rises in the west. One spin takes <b>243 Earth days</b>; one orbit takes <b>225 Earth days</b>.`,
+      q: `On Venus, which takes longer?`, o: ['One spin on its axis', 'One trip around the Sun'], a: 0,
+      h: `Compare 243 and 225.`, x: `Venus takes longer to spin once than to orbit the Sun.` },
+    { r: `Surface temperature: about <b>467 °C</b> (872 °F), hot enough to melt lead.<br>Surface pressure: about <b>93 times</b> Earth's sea-level pressure.`,
+      q: `Standing in 93 times Earth's air pressure would feel like being...`, o: ['Deep underwater in Earth\'s ocean', 'On top of Mount Everest', 'In outer space'], a: 0,
+      h: `More pressure, not less. Where on Earth is pressure crushing?`, x: `It is like being nearly a kilometer underwater. Soviet landers survived only a couple of hours.` },
+    { r: `About <b>50 km up</b>, temperatures are <b>30 to 70 °C</b>, which some Earth microbes could tolerate. NASA: none of the findings so far provide compelling evidence for life in Venus's clouds.`,
+      q: `Where on Venus is the best (still long-shot) place to imagine life?`, o: ['In the cloud layer about 50 km up', 'On the hot surface', 'Deep in the core'], a: 0,
+      h: `Which zone has temperatures some microbes can handle?`, x: `The cloud layer is mild in temperature, but very acidic and very dry.` },
+  ],
+  life: { water: ['no', 'maybe'], chem: ['maybe', 'yes'], energy: ['yes', 'maybe'], rating: 'worth', alt: ['unlikely'],
+    why: { water: `Too hot for liquid water on the surface. The clouds hold acid droplets, not oceans.`, chem: `Carbon dioxide and sulfur compounds are there.`, energy: `Sunlight reaches the cloud tops.`,
+      rating: `The surface is hopeless, but the mild cloud layer keeps Venus a long shot worth a look. NASA notes no compelling evidence yet.` } },
+},
+{
+  id: 'earth', name: 'Earth', kind: 'Rocky planet', au: 1, g: 9.81, tools: TOOLS,
+  intro: `Earth, home base. The only world known to have life. Use it to calibrate your instruments before heading out.`,
+  src: [['Facts About Earth', 'https://science.nasa.gov/earth/facts/'], ['Why Europa: Ingredients for Life', 'https://science.nasa.gov/mission/europa-clipper/why-europa-ingredients-for-life/']],
+  scans: [
+    { r: `Atmosphere: <b>78% nitrogen, 21% oxygen</b>, and 1% other gases such as argon, carbon dioxide and neon.`,
+      q: `No other planet has this much free oxygen. What mostly put it there?`, o: ['Life, through photosynthesis', 'Volcanic eruptions', 'The solar wind'], a: 0,
+      h: `Plants, algae and some bacteria release a gas as they make food from sunlight.`, x: `Photosynthesis by microbes and plants filled Earth's air with oxygen. Oxygen-rich air is itself a sign of life.` },
+    { r: `Oceans cover about <b>71%</b> of the surface.<br>The lithosphere is divided into huge <b>plates that are constantly moving</b>.`,
+      q: `Which process keeps recycling Earth's crust?`, o: ['Plate tectonics', 'Crater impacts', 'Wind alone'], a: 0,
+      h: `Read the second line of the reading.`, x: `Moving plates build mountains and volcanoes and recycle crust and carbon. No other planet is known to do it the same way.` },
+    { r: `Earth spins once every <b>23.9 hours</b>. A molten nickel-iron core generates a <b>magnetic field</b>, which the solar wind stretches into a teardrop shape.`,
+      q: `How does the magnetic field help life on the surface?`, o: ['It deflects charged particles from the solar wind', 'It makes plants grow faster', 'It keeps the Moon in orbit'], a: 0,
+      h: `What is the field pushing against?`, x: `The magnetic field shields the surface and atmosphere from much of the solar wind.` },
+    { r: `NASA: Earth has a very hospitable temperature and mix of chemicals. Its oceans provided a place for life to begin about <b>3.8 billion years ago</b>.<br>NASA's search for life elsewhere looks for the same key ingredients.`,
+      q: `Which three ingredients does NASA say life needs?`, o: ['Liquid water, energy, and chemical building blocks', 'Oxygen, soil, and sunlight', 'Ice, metal, and wind'], a: 0,
+      h: `Earth's oceans are one of them.`, x: `Liquid water, an energy source, and the right chemistry. You will judge every world against these three.` },
+  ],
+  life: { water: ['yes'], chem: ['yes'], energy: ['yes'], rating: 'confirmed', alt: [],
+    why: { water: `Oceans cover about 71% of the surface.`, chem: `A "mix of chemicals that have made life abundant here."`, energy: `Sunlight, plus chemical energy at deep-sea vents.`,
+      rating: `You are standing on the proof. Earth is the only world where life is confirmed.` } },
+},
+{
+  id: 'moon', name: "Earth's Moon", kind: 'Moon of Earth', parent: 'earth', au: 1, g: 1.62, tools: TOOLS,
+  intro: `Earth's Moon. Low gravity, no air, and an excellent view of home. Try jumping with the space bar.`,
+  src: [['Moon Facts', 'https://science.nasa.gov/moon/facts/']],
+  scans: [
+    { r: `The Moon has a very thin <b>exosphere</b>. It is not breathable and cannot scatter sunlight.`,
+      q: `Without air to scatter light, what color is the daytime sky on the Moon?`, o: ['Black', 'Blue', 'Orange'], a: 0,
+      h: `Earth's sky is blue because air scatters sunlight. Take the air away.`, x: `Black, even at noon. Look up.` },
+    { r: `Dark <b>maria</b> are lava-filled impact basins that formed between 4.2 and 1.2 billion years ago. Light <b>highlands</b> surround them. Nearly everything is covered in <b>regolith</b>: powdery gray dust and rocky debris.`,
+      q: `The maria are made of solidified lava. Which rock would you expect there?`, o: ['Basalt', 'Limestone', 'Sandstone'], a: 0,
+      h: `Think of the dark volcanic rock you would find at a lava flow on Earth.`, x: `The maria are basalt, the same dark, fine-grained volcanic rock that floors Earth's oceans.` },
+    { r: `About <b>127 °C</b> in full sunlight, about <b>-173 °C</b> in darkness.<br>The Moon likely formed after a <b>Mars-sized body collided with Earth</b>.`,
+      q: `Why are the Moon's temperature swings so extreme?`, o: ['It has no thick atmosphere to hold heat', 'It is closer to the Sun than Earth', 'Its core is frozen'], a: 0,
+      h: `Same reason as Mercury.`, x: `No atmospheric blanket, so heat pours in by day and escapes at night.` },
+    { r: `High concentrations of <b>water ice</b> sit in permanently shadowed regions at the lunar poles. NASA: the Moon's weak atmosphere and lack of liquid water cannot support life as we know it.`,
+      q: `The Moon has ice. Which ingredient for life is still missing?`, o: ['Liquid water', 'Sunlight', 'Rock'], a: 0,
+      h: `Ice is water, but in which state?`, x: `Frozen water is a great resource for astronauts, but life needs it liquid.` },
+  ],
+  life: { water: ['no'], chem: ['maybe', 'no'], energy: ['yes', 'maybe'], rating: 'unlikely', alt: [],
+    why: { water: `Ice in shadowed craters, no liquid water.`, chem: `Some ice and minerals, but no air and little carbon.`, energy: `Sunlight, two weeks at a time.`,
+      rating: `NASA: no evidence of living things, and the Moon cannot support life as we know it.` } },
+},
+{
+  id: 'mars', name: 'Mars', kind: 'Rocky planet', au: 1.52, g: 3.71, tools: TOOLS,
+  intro: `Mars, the Red Planet. Home to the biggest volcano and the longest canyon in the solar system, and a fleet of very hard-working robots.`,
+  src: [['Mars: Facts', 'https://science.nasa.gov/mars/facts/'], ['The Five Most Abundant Gases in the Martian Atmosphere', 'https://science.nasa.gov/resource/the-five-most-abundant-gases-in-the-martian-atmosphere/']],
+  scans: [
+    { r: `Atmosphere: thin, and <b>95.9% carbon dioxide</b>. The next most abundant gases are argon, nitrogen, oxygen and carbon monoxide.`,
+      q: `Mars and Venus both have carbon dioxide air. Why is Mars cold while Venus bakes?`, o: ['Mars\'s atmosphere is very thin and Mars is farther from the Sun', 'Martian carbon dioxide is a different kind', 'Mars has oceans that cool it'], a: 0,
+      h: `The reading says "thin."`, x: `A thin blanket of carbon dioxide traps very little heat.` },
+    { r: `Mars is red from <b>iron</b> in rocks and dust that has <b>oxidized</b>, or rusted.<br>Olympus Mons is the largest volcano in the solar system. Valles Marineris is about 3,870 km long.`,
+      q: `What makes Mars red?`, o: ['Rusted iron in rocks and dust', 'Red ice', 'Red plants'], a: 0,
+      h: `Read the first line.`, x: `Iron oxide: Mars is basically a planet with a rust problem.` },
+    { r: `Temperature: from about <b>20 °C</b> (70 °F) down to about <b>-153 °C</b> (-225 °F).<br>Air pressure: less than 1% of Earth's.`,
+      q: `A 20 °C afternoon sounds pleasant. Why can't liquid water last on the surface today?`, o: ['The air is so thin that water quickly freezes or evaporates', 'It is far too hot', 'Mars has no gravity'], a: 0,
+      h: `Look at the air pressure.`, x: `In such thin air, liquid water boils off or freezes. Only briny water may flow briefly down some slopes.` },
+    { r: `Ancient <b>river valleys, deltas and lakebeds</b> show Mars was once wetter. Today, water ice lies just under the surface near the poles.<br>NASA: scientists don't expect to find living things thriving on Mars today; they look for signs of life that existed long ago.`,
+      q: `Where would you send a rover to hunt for signs of ancient life?`, o: ['An ancient lakebed or river delta', 'The summit of Olympus Mons', 'A polar ice cap'], a: 0,
+      h: `Where did liquid water once sit for a long time?`, x: `That is why NASA's Perseverance rover explores Jezero Crater, an ancient lake with a river delta.` },
+  ],
+  life: { water: ['maybe'], chem: ['yes', 'maybe'], energy: ['yes', 'maybe'], rating: 'worth', alt: ['top'],
+    why: { water: `Liquid water long ago, ice and occasional brines today: a maybe.`, chem: `Carbon dioxide, nitrogen, and minerals that formed in water.`, energy: `Sunlight and chemical energy in rocks.`,
+      rating: `NASA does not expect life thriving today, but ancient lakebeds make Mars a prime place to search for past life.` } },
+},
+{
+  id: 'vesta', name: 'Vesta', kind: 'Asteroid, asteroid belt', au: 2.36, g: 0.25, tools: TOOLS,
+  intro: `Vesta, the second most massive body in the asteroid belt. NASA's Dawn spacecraft orbited it for 14 months. Some of the rocks in museum meteorite drawers on Earth probably came from right here.`,
+  src: [['4 Vesta', 'https://science.nasa.gov/solar-system/asteroids/4-vesta/'], ['Dawn: Science Overview', 'https://science.nasa.gov/mission/dawn/science/overview/']],
+  scans: [
+    { r: `NASA's Dawn team describes Vesta as a <b>terrestrial world, rocky and dense like Mars and Mercury</b>. Its neighbor Ceres is more like the <b>icy moons</b> of the outer solar system.`,
+      q: `Vesta and Ceres share the asteroid belt. What is the biggest difference between them?`, o: ['Vesta is dry rock; Ceres is rich in ice', 'Vesta is a gas ball; Ceres is rock', 'There is no difference'], a: 0,
+      h: `Compare "rocky and dense" with "icy moons."`, x: `Two neighbors, two recipes: Vesta formed dry and rocky, Ceres kept lots of water ice.` },
+    { r: `Vesta has <b>separated into crust, mantle and core</b>, much like Earth. It appears to be the source of the <b>HED meteorites</b> (howardites, eucrites and diogenites) found on Earth. Eucrites are basalts.`,
+      q: `Basalt meteorites from Vesta tell you its crust formed from...`, o: ['Lava, so Vesta was once hot enough to melt inside', 'Sediment laid down in oceans', 'Frozen methane'], a: 0,
+      h: `Basalt is a volcanic rock.`, x: `Vesta melted, let iron sink to a core, and erupted lava onto its surface, just like a small planet. It is a leftover building block of the rocky planets.` },
+    { r: `<b>Rheasilvia crater</b> is about 500 km wide, roughly 95% of Vesta's mean diameter. The impact removed about <b>1% of Vesta's mass</b> less than a billion years ago. Vesta holds almost <b>9%</b> of all asteroid mass, second only to Ceres.`,
+      q: `Where did many of the Vesta meteorites on Earth most likely come from?`, o: ['Debris blasted off Vesta by giant impacts like Rheasilvia', 'Vesta\'s volcanoes firing rocks to Earth', 'Comets that passed by Vesta'], a: 0,
+      h: `Something knocked 1% of Vesta's mass into space.`, x: `Big impacts launched pieces of Vesta's crust, and some of those fragments eventually fell to Earth.` },
+    { r: `Dawn orbited Vesta from <b>July 2011 to September 2012</b>, then left for Ceres. Vesta is dry, airless and rocky.`,
+      q: `Which ingredient for life is Vesta most clearly missing?`, o: ['Liquid water', 'Sunlight', 'Rock'], a: 0,
+      h: `Dawn's team called it rocky and dense, unlike icy Ceres.`, x: `No liquid water, and almost no ice, so Vesta is a record of planet building rather than a home for life.` },
+  ],
+  life: { water: ['no'], chem: ['no', 'maybe'], energy: ['maybe', 'yes', 'no'], rating: 'unlikely', alt: [],
+    why: { water: `Dry and rocky, with no liquid water.`, chem: `Rock and metal, but little water or carbon.`, energy: `Some sunlight, no internal heat today.`,
+      rating: `NASA's pages make no case for life on Vesta. It is a dry, airless protoplanet: a time capsule of how rocky planets formed.` } },
+},
+{
+  id: 'ceres', name: 'Ceres', kind: 'Dwarf planet, asteroid belt', au: 2.77, g: 0.28, tools: TOOLS,
+  intro: `Ceres, the largest object in the asteroid belt between Mars and Jupiter. Gravity here is about 3% of Earth's. Jump carefully.`,
+  src: [['Ceres: Facts', 'https://science.nasa.gov/dwarf-planets/ceres/facts/']],
+  scans: [
+    { r: `Ceres has a <b>very thin atmosphere</b> with evidence of <b>water vapor</b>. The vapor may come from ice volcanoes, or from surface ice turning straight into gas.`,
+      q: `Ice turning straight into vapor, without melting first, is called...`, o: ['Sublimation', 'Condensation', 'Erosion'], a: 0,
+      h: `Dry ice does this at a party.`, x: `Sublimation. In near-vacuum, ice skips the liquid stage.` },
+    { r: `A rocky, dusty crust with <b>large salt deposits</b>. The salts include minerals like <b>magnesium sulfate</b>, not table salt.`,
+      q: `What do salt deposits on the surface suggest?`, o: ['Salty water once reached the surface and evaporated', 'Comets dropped salt crystals', 'It rained table salt'], a: 0,
+      h: `How do salt flats form on Earth?`, x: `Salty water rose, the water escaped to space, and the salts stayed behind.` },
+    { r: `Radius: <b>476 km</b>, about 1/13 of Earth's. Ceres holds <b>25% of the asteroid belt's total mass</b>.<br>Found in 1801 by Giuseppe Piazzi; classified as a dwarf planet in 2006. Jupiter's gravity kept it from growing into a full planet.`,
+      q: `One small world holds a quarter of the belt's mass. What does that tell you about the asteroid belt?`, o: ['It is mostly empty space with little total mass', 'It is a solid wall of rock', 'Asteroids are bigger than planets'], a: 0,
+      h: `If Ceres is a big share, how big can the total be?`, x: `The belt's total mass is tiny, and its asteroids are far apart. Spacecraft cross it safely.` },
+    { r: `Ceres could be up to <b>25% water</b>, maybe more than Earth has, mostly in an <b>icy mantle</b>.<br>NASA: one of the few places scientists would like to search for signs of life; any life would likely be tiny microbes.`,
+      q: `Ceres may have more water than Earth. Why isn't it a sure bet for life?`, o: ['Most of that water is frozen', 'Water is toxic to microbes', 'It is too hot'], a: 0,
+      h: `Which ingredient needs water in a certain state?`, x: `Life needs liquid water. Ceres may hide pockets of salty liquid, which is why it is still worth a look.` },
+  ],
+  life: { water: ['maybe'], chem: ['maybe', 'yes'], energy: ['maybe', 'no'], rating: 'worth', alt: ['top'],
+    why: { water: `Lots of ice, perhaps pockets of salty liquid: a maybe.`, chem: `Salts and water are there.`, energy: `Weak sunlight and little internal heat.`,
+      rating: `NASA calls Ceres one of the few places scientists would like to search for signs of life.` } },
+},
+{
+  id: 'jupiter', name: 'Jupiter', kind: 'Gas giant', au: 5.2, g: 24.79, deck: true, tools: DECK_TOOLS,
+  intro: `Jupiter, the giant. There is no ground here, so you are on PEBBLES's floating deck, high in the cloud tops. Don't lean over the railing.`,
+  src: [['Jupiter Facts', 'https://science.nasa.gov/jupiter/jupiter-facts/']],
+  scans: [
+    { r: `Atmosphere: <b>hydrogen and helium</b>, a makeup similar to the Sun's.`,
+      q: `If Jupiter is made of the same stuff as the Sun, why isn't it a star?`, o: ['It is not massive enough to start fusion in its core', 'It is too far from the Sun', 'It is made of ice'], a: 0,
+      h: `What powers the Sun's core?`, x: `Fusion needs enormous mass and pressure. Jupiter would need to be dozens of times more massive.` },
+    { r: `As a gas giant, Jupiter <b>doesn't have a true surface</b>. Cloud layers, top to bottom: <b>ammonia ice</b>, then <b>ammonium hydrosulfide</b> crystals, then <b>water ice and vapor</b>.`,
+      q: `Sinking down through the clouds, which layer would you reach last?`, o: ['Water ice and vapor', 'Ammonia ice', 'Ammonium hydrosulfide'], a: 0,
+      h: `The reading lists them top to bottom.`, x: `Water clouds lie deepest, where it is warmer.` },
+    { r: `The <b>Great Red Spot</b> is a storm bigger than Earth, watched for more than 300 years.<br>Deep inside, hydrogen becomes a liquid that <b>conducts electricity like a metal</b>. The magnetic field is 16 to 54 times as powerful as Earth's.`,
+      q: `What generates Jupiter's huge magnetic field?`, o: ['Flowing, electrically conducting hydrogen deep inside', 'The Great Red Spot', 'Its moons'], a: 0,
+      h: `Earth's field comes from a moving conductor in its core.`, x: `A vast ocean of metallic hydrogen acts like Earth's molten iron core, only much bigger.` },
+    { r: `A day lasts <b>9.9 hours</b>; a year about <b>12 Earth years</b>. <b>115</b> moons are officially recognized.<br>NASA: Jupiter itself is probably not conducive to life as we know it, but Europa may have a vast ocean beneath its icy crust.`,
+      q: `Where in Jupiter's system should astrobiologists look?`, o: ['The icy moon Europa', 'Inside the Great Red Spot', 'Jupiter\'s faint rings'], a: 0,
+      h: `NASA names one moon in the reading.`, x: `Europa. Add it to your flight plan.` },
+  ],
+  life: { water: ['maybe', 'no'], chem: ['yes', 'maybe'], energy: ['yes', 'maybe'], rating: 'unlikely', alt: [],
+    why: { water: `Water clouds, but no surface and no stable place for it.`, chem: `Hydrogen, ammonia and water are there.`, energy: `Sunlight, heat and lightning.`,
+      rating: `NASA: Jupiter is probably not conducive to life. Storms toss anything up and down through crushing pressure.` } },
+},
+{
+  id: 'io', name: 'Io', kind: 'Moon of Jupiter', parent: 'jupiter', au: 5.2, g: 1.8, tools: TOOLS,
+  intro: `Io, the most volcanic world in the solar system. That glow on the horizon is not a sunset. Mind your boots.`,
+  src: [['Io: Facts', 'https://science.nasa.gov/jupiter/jupiter-moons/io/facts/']],
+  scans: [
+    { r: `Io has a thin atmosphere whose main component is <b>sulfur dioxide</b>.`,
+      q: `Where does Io's sulfur dioxide most likely come from?`, o: ['Its volcanoes', 'Comet impacts', 'Its oceans'], a: 0,
+      h: `What is Io famous for?`, x: `Volcanoes pump sulfur dioxide into the sky, and some falls back as frost.` },
+    { r: `<b>Hundreds of volcanoes</b>, some with lava fountains dozens of kilometers high. The surface is likely <b>sulfur compounds or silicate rock</b>.`,
+      q: `With so many eruptions, what would you expect about the age of Io's surface?`, o: ['Very young, constantly repaved by lava', 'Ancient and covered in craters', 'Frozen and unchanged'], a: 0,
+      h: `Lava keeps covering things up.`, x: `Fresh lava buries craters almost as fast as they form, so Io's surface is very young.` },
+    { r: `<b>Tidal heating</b>: Jupiter's gravity and the pull of nearby moons flex Io, and its surface rises and falls by up to <b>100 m</b>.`,
+      q: `What heats Io's interior?`, o: ['Tidal flexing from gravity', 'Sunlight', 'Friction with Jupiter\'s rings'], a: 0,
+      h: `The reading says the surface rises and falls.`, x: `Like bending a paperclip back and forth until it gets hot.` },
+    { r: `Io sits in a radiation-heavy <b>plasma torus</b> around Jupiter.<br>NASA: constant volcanism and intense radiation make life as we know it unlikely on Io.`,
+      q: `Io and Europa are both heated by tides. Why is Europa the better bet for life?`, o: ['Europa has an ocean of liquid water under its ice', 'Europa is closer to the Sun', 'Europa has more volcanoes'], a: 0,
+      h: `Which ingredient does Io lack?`, x: `Io has the energy but no liquid water. Europa may have both.` },
+  ],
+  life: { water: ['no'], chem: ['maybe', 'no'], energy: ['yes'], rating: 'unlikely', alt: [],
+    why: { water: `No liquid water: Io is bone dry.`, chem: `Sulfur, oxygen and silicates, but little carbon.`, energy: `Plenty of heat from tides.`,
+      rating: `NASA: constant volcanism and intense radiation make life as we know it unlikely.` } },
+},
+{
+  id: 'europa', name: 'Europa', kind: 'Moon of Jupiter', parent: 'jupiter', au: 5.2, g: 1.31, tools: TOOLS,
+  intro: `Europa, an ice-covered moon with a hidden ocean. NASA's Europa Clipper mission is investigating it. Watch your step on the cracks.`,
+  src: [['Europa: Facts', 'https://science.nasa.gov/jupiter/jupiter-moons/europa/europa-facts/'], ['Why Europa: Ingredients for Life', 'https://science.nasa.gov/mission/europa-clipper/why-europa-ingredients-for-life/']],
+  scans: [
+    { r: `A tenuous atmosphere of <b>oxygen</b>. Jupiter's radiation splits water ice at the surface, freeing oxygen. Hubble data hint that water may vent into space.`,
+      q: `If that surface oxygen reaches the ocean below, what could it provide?`, o: ['Chemical energy for microbes', 'Sunlight', 'Heat for volcanoes'], a: 0,
+      h: `Oxygen can react with other chemicals and release...`, x: `Oxygen reacting in the ocean could release energy, like a battery for life.` },
+    { r: `Surface: mostly <b>water ice</b>, crossed by cracks and ridges. Reddish-brown material likely contains <b>salts and sulfur compounds</b>.<br>Ice shell: about <b>15 to 25 km</b> thick.`,
+      q: `What best explains the cracks in Europa's ice?`, o: ['Jupiter\'s tides flex and fracture the shell', 'Plate collisions exactly like Earth\'s', 'Only meteor impacts'], a: 0,
+      h: `Same force that heats Io.`, x: `Tidal flexing likely fractures the surface and may drive activity on the seafloor too.` },
+    { r: `Ocean depth: about <b>60 to 150 km</b>. Europa is about a quarter of Earth's diameter, yet its ocean may hold <b>twice as much water</b> as all of Earth's oceans.`,
+      q: `How can a small moon hold more water than Earth?`, o: ['Its ocean is global and very deep', 'It is mostly gas inside', 'It borrows water from Jupiter'], a: 0,
+      h: `Earth's oceans average about 4 km deep.`, x: `A global ocean dozens of times deeper than Earth's adds up to more water.` },
+    { r: `No sunlight reaches the ocean, so any life would rely on <b>chemical reactions</b>. Heat and hydrothermal activity on the seafloor may supply energy. Key elements such as carbon and phosphorus are likely there.<br>NASA: one of the most promising places in the solar system to look for life beyond Earth.`,
+      q: `Which Earth ecosystems live without sunlight, the way Europan life might?`, o: ['Communities around deep-sea hydrothermal vents', 'Tropical rainforests', 'Shallow coral reefs'], a: 0,
+      h: `Look deep, where hot water meets rock.`, x: `Vent communities live on chemical energy in total darkness.` },
+  ],
+  life: { water: ['yes'], chem: ['yes', 'maybe'], energy: ['yes', 'maybe'], rating: 'top', alt: [],
+    why: { water: `A global ocean with maybe twice Earth's water.`, chem: `Water plus key elements such as carbon and phosphorus.`, energy: `Chemical energy from oxygen and from the seafloor.`,
+      rating: `NASA: "one of the most promising places in the solar system to look for life beyond Earth."` } },
+},
+{
+  id: 'ganymede', name: 'Ganymede', kind: 'Moon of Jupiter', parent: 'jupiter', au: 5.2, g: 1.43, tools: TOOLS,
+  intro: `Ganymede, the largest moon in the solar system, bigger than the planet Mercury. Keep an eye on the sky: this moon has its own auroras.`,
+  src: [['Ganymede: Facts', 'https://science.nasa.gov/jupiter/jupiter-moons/ganymede/facts/'], ['Hubble Observations Suggest Underground Ocean on Jupiter\'s Largest Moon', 'https://science.nasa.gov/missions/hubble/nasas-hubble-observations-suggest-underground-ocean-on-jupiters-largest-moon/']],
+  scans: [
+    { r: `Hubble found a <b>thin oxygen atmosphere</b>, likely released from Ganymede's icy surface.`,
+      q: `Where does Ganymede's oxygen most likely come from?`, o: ['Water ice on the surface being broken apart', 'Plants growing under the ice', 'Volcanoes like Io\'s'], a: 0,
+      h: `Water is made of hydrogen and oxygen.`, x: `Radiation and sunlight split water ice, freeing oxygen. Europa makes its thin oxygen air the same way.` },
+    { r: `About <b>40%</b> of the surface is highly cratered <b>dark terrain</b>. About <b>60%</b> is <b>light grooved terrain</b>, with grooves running thousands of km and ridges up to 700 m high.`,
+      q: `Which terrain is older?`, o: ['The dark, heavily cratered terrain', 'The light, grooved terrain', 'They must be the same age'], a: 0,
+      h: `Craters pile up over time.`, x: `More craters means more time exposed. The grooved terrain formed later, when the icy crust was stretched and cracked.` },
+    { r: `Diameter: about <b>5,260 km</b>, bigger than Mercury and Pluto. Daytime surface: about <b>-183 to -113 °C</b> (-297 to -171 °F). Inside: a metallic iron core, a rocky mantle, and an <b>icy outer shell</b>.`,
+      q: `Ganymede is wider than Mercury but has less than half its mass. Why?`, o: ['It contains lots of ice, which is much less dense than rock and metal', 'It is hollow', 'Jupiter pulls some of its mass away'], a: 0,
+      h: `Look at what the outer layer is made of.`, x: `Ice is light. Mercury is mostly metal; Ganymede is part ice.` },
+    { r: `Ganymede is the <b>only moon known to have its own magnetic field</b>, so it has auroras. They "rock" back and forth as Jupiter's field changes. Hubble saw <b>less rocking than expected</b>: a salty, electrically conducting <b>ocean about 100 km thick</b> under roughly 150 km of ice damps it.`,
+      q: `How did Hubble detect an ocean it could not see?`, o: ['A salty ocean changed how the auroras rocked', 'It photographed waves on the surface', 'A lander drilled through the ice'], a: 0,
+      h: `Salt water conducts electricity and pushes back on magnetic fields.`, x: `A clever piece of detective work: the auroras gave the ocean away. It may hold more water than Earth's surface.` },
+  ],
+  life: { water: ['yes'], chem: ['maybe', 'yes'], energy: ['maybe', 'yes'], rating: 'worth', alt: ['top'],
+    why: { water: `A salty ocean about 100 km thick.`, chem: `Salt water, and possibly a rocky sea floor.`, energy: `Uncertain: the ocean sits under about 150 km of ice, far from sunlight.`,
+      rating: `A huge ocean, but deeply buried. A 2014 model suggests the sea floor might touch rock, which scientists consider key for life. Worth a look.` } },
+},
+{
+  id: 'callisto', name: 'Callisto', kind: 'Moon of Jupiter', parent: 'jupiter', au: 5.2, g: 1.24, tools: TOOLS,
+  intro: `Callisto, the most heavily cratered surface in the solar system. Nothing much has happened here for about 4 billion years, which is exactly why geologists love it.`,
+  src: [['Callisto: Facts', 'https://science.nasa.gov/jupiter/jupiter-moons/callisto/facts/']],
+  scans: [
+    { r: `A <b>very thin carbon dioxide exosphere</b>. Later research also found oxygen and hydrogen.`,
+      q: `With almost no atmosphere, what happens to incoming space rocks?`, o: ['They hit the surface at full speed, leaving craters', 'They burn up as shooting stars', 'They bounce off'], a: 0,
+      h: `Shooting stars need air to burn up in.`, x: `No atmosphere means no shield. Every impact leaves its mark.` },
+    { r: `Callisto has the <b>most heavily cratered surface</b> in the solar system. The surface is about <b>4 billion years old</b>, made of ice and rock.`,
+      q: `What does a surface packed with craters tell a geologist?`, o: ['Very little geologic activity has erased them for billions of years', 'Volcanoes are erupting today', 'Oceans recently flooded the surface'], a: 0,
+      h: `Compare Io, which has almost no craters.`, x: `Callisto is a fossil surface: no volcanoes, no plate tectonics, nothing to repave it.` },
+    { r: `Callisto orbits about <b>1,883,000 km</b> from Jupiter, once every <b>16.7 days</b>. It is nearly the size of Mercury. Its interior may be <b>ice mixed with rock and metal</b>.`,
+      q: `Io orbits close to Jupiter and is wildly volcanic. Why is Callisto so quiet?`, o: ['It is much farther from Jupiter, so tidal heating is weak', 'It is made of iron', 'It is closer to the Sun'], a: 0,
+      h: `What heats Io?`, x: `Tides weaken quickly with distance. Callisto gets very little tidal heat.` },
+    { r: `There may be an <b>ocean about 250 km below the surface</b>, but NASA notes it <b>may not exist at all</b>.<br>NASA: Callisto is on the list of possible places where life could exist beyond Earth.`,
+      q: `Why is Callisto's possible ocean a weaker bet than Europa's?`, o: ['It is very deep, unconfirmed, and gets little heat or energy', 'It is too hot', 'It gets too much sunlight'], a: 0,
+      h: `Think depth, certainty and energy.`, x: `Callisto stays on the list, but behind Europa and Enceladus.` },
+  ],
+  life: { water: ['maybe'], chem: ['maybe', 'yes'], energy: ['no', 'maybe'], rating: 'worth', alt: ['unlikely'],
+    why: { water: `A possible ocean 250 km down, unconfirmed.`, chem: `Ice, rock and carbon dioxide.`, energy: `Little tidal heat and almost no sunlight reaches below.`,
+      rating: `NASA keeps Callisto "on the list of possible places where life could exist," but it is a long shot.` } },
+},
+{
+  id: 'saturn', name: 'Saturn', kind: 'Gas giant', au: 9.5, g: 10.44, deck: true, tools: DECK_TOOLS,
+  intro: `Saturn, the ringed showpiece. You are on the floating deck again, drifting in butterscotch clouds. The view up is spectacular.`,
+  src: [['Saturn: Facts', 'https://science.nasa.gov/saturn/facts/']],
+  scans: [
+    { r: `Saturn is mostly <b>hydrogen and helium</b>. It is the only planet with an average <b>density lower than water's</b>.`,
+      q: `Given a bathtub big enough, Saturn would...`, o: ['Float', 'Sink', 'Dissolve'], a: 0,
+      h: `Less dense than water.`, x: `It would float. Finding the bathtub is the hard part.` },
+    { r: `There is <b>no true surface</b>. The rings are billions of small chunks of <b>ice and rock</b> coated with dust.`,
+      q: `What are Saturn's rings made of?`, o: ['Chunks of ice and rock', 'Solid metal hoops', 'Glowing gas'], a: 0,
+      h: `Read the reading.`, x: `Billions of chunks, from dust grains to house-sized boulders.` },
+    { r: `Equator winds reach <b>500 meters per second</b> (about 1,800 km/h). A six-sided jet stream, the <b>hexagon</b>, circles the north pole, about 30,000 km across.`,
+      q: `Earth's strongest hurricanes blow about 300 km/h. Saturn's winds are about...`, o: ['6 times faster', 'The same speed', 'Half as fast'], a: 0,
+      h: `Divide 1,800 by 300.`, x: `About six times hurricane speed.` },
+    { r: `A day lasts <b>10.7 hours</b>; a year about <b>29.4 Earth years</b>. <b>274</b> confirmed moons as of March 2025.<br>NASA: Saturn is not conducive to life, but its moons <b>Enceladus and Titan</b>, which have internal oceans, could possibly support life.`,
+      q: `Which of Saturn's moons belong on your list?`, o: ['Enceladus and Titan', 'Mimas and Phoebe', 'None of them'], a: 0,
+      h: `NASA names two in the reading.`, x: `Enceladus and Titan both have internal oceans. They are on your map.` },
+  ],
+  life: { water: ['no', 'maybe'], chem: ['maybe', 'yes'], energy: ['maybe', 'yes'], rating: 'unlikely', alt: [],
+    why: { water: `No surface and no stable liquid water.`, chem: `Hydrogen, helium and simple compounds.`, energy: `Some sunlight and internal heat.`,
+      rating: `NASA: Saturn's environment is not conducive to life as we know it.` } },
+},
+{
+  id: 'enceladus', name: 'Enceladus', kind: 'Moon of Saturn', parent: 'saturn', au: 9.5, g: 0.11, tools: TOOLS,
+  intro: `Enceladus, a tiny ice moon only about 500 km across, with geysers at its south pole. Gravity is about 1% of Earth's, so jumping is very rewarding.`,
+  src: [['Enceladus', 'https://science.nasa.gov/saturn/moons/enceladus/'], ['Enceladus Top 10 Science Highlights', 'https://science.nasa.gov/missions/cassini/enceladus-top-10-science-highlights/'], ['NASA Missions Provide New Insights into Ocean Worlds', 'https://science.nasa.gov/missions/cassini/nasa-missions-provide-new-insights-into-ocean-worlds-in-our-solar-system/']],
+  scans: [
+    { r: `Plume gas: mostly <b>water vapor</b>, with carbon dioxide, methane, and about <b>1% hydrogen gas</b>. Some microbes on Earth combine hydrogen with carbon dioxide to make methane.`,
+      q: `Why is hydrogen gas in the plume exciting?`, o: ['It is a chemical energy source microbes could use', 'It means Enceladus is becoming a star', 'It is free rocket fuel'], a: 0,
+      h: `Re-read the second sentence.`, x: `A scientist on the study called it "a candy store for microbes."` },
+    { r: `Enceladus is the <b>most reflective body</b> in the solar system. Near-parallel fractures called <b>tiger stripes</b> cross the south pole, where the jets erupt. Plume material forms Saturn's <b>E ring</b>.`,
+      q: `Why is Enceladus so bright and white?`, o: ['Fresh ice from the plumes keeps snowing onto it', 'It is covered in salt', 'Saturn lights it up'], a: 0,
+      h: `What happens to plume material that falls back down?`, x: `Plume snow constantly repaints the surface with fresh ice.` },
+    { r: `Surface: about <b>-201 °C</b> (-330 °F). Yet gravity measurements show the jets are supplied by a <b>global ocean</b> inside the moon. The ice shell is maybe 1 to 5 km thick at the south pole.`,
+      q: `How can liquid water exist inside such a cold moon?`, o: ['Tidal flexing from Saturn heats the interior', 'Sunlight melts it from above', 'Salt makes the ice warm'], a: 0,
+      h: `Same idea as Io and Europa.`, x: `Saturn's tides flex Enceladus and keep the ocean liquid.` },
+    { r: `Silica and methane in the plume point to <b>hydrothermal activity</b>: hot water reacting with rock beneath the sea. The jets contain salty particles and <b>organic molecules</b>.<br>NASA: Enceladus has nearly all the ingredients for habitability.`,
+      q: `Cassini flew through the plume. Why is that a big deal?`, o: ['It can sample the ocean without drilling through ice', 'It can photograph the seafloor', 'It proves life exists there'], a: 0,
+      h: `The plume brings the ocean up to you.`, x: `The ocean sprays itself into space, so a spacecraft can taste it on a flyby. Cassini could not detect life itself.` },
+  ],
+  life: { water: ['yes'], chem: ['yes'], energy: ['yes', 'maybe'], rating: 'top', alt: [],
+    why: { water: `A global ocean, sampled through the plumes.`, chem: `Salts, organic molecules, ammonia and carbon dioxide.`, energy: `Hydrothermal vents and hydrogen gas.`,
+      rating: `NASA: nearly all the ingredients for habitability, "a promising lead in our search for worlds where life could exist."` } },
+},
+{
+  id: 'titan', name: 'Titan', kind: 'Moon of Saturn', parent: 'saturn', au: 9.5, g: 1.35, tools: TOOLS,
+  intro: `Titan, Saturn's largest moon, bigger than the planet Mercury. Thick orange haze, methane drizzle, and lakes you definitely should not swim in.`,
+  src: [['Titan: Facts', 'https://science.nasa.gov/saturn/moons/titan/facts/']],
+  scans: [
+    { r: `Atmosphere: about <b>95% nitrogen</b> and <b>5% methane</b>. Sunlight splits methane and nitrogen, and the pieces recombine into many <b>organic chemicals</b>, forming an orange haze.`,
+      q: `What is Titan's orange haze made of?`, o: ['Organic, carbon-rich molecules', 'Rust dust', 'Sulfuric acid'], a: 0,
+      h: `What do methane fragments make when they recombine?`, x: `Titan is a giant organic chemistry lab.` },
+    { r: `Seas and lakes of <b>liquid methane and ethane</b>. Vast dark <b>dunes</b> of hydrocarbon grains, thought to look like coffee grounds.`,
+      q: `On Titan, what falls as rain and fills the lakes?`, o: ['Methane and ethane', 'Water', 'Sulfuric acid'], a: 0,
+      h: `Read the first line.`, x: `Titan has a full "hydrological" cycle, only with methane instead of water.` },
+    { r: `Surface temperature: <b>-179 °C</b> (-290 °F). Surface pressure: about <b>60% greater</b> than Earth's, like diving 15 m underwater.`,
+      q: `At -179 °C, water ice on Titan behaves like...`, o: ['Hard rock', 'A liquid', 'Steam'], a: 0,
+      h: `Think of how hard ice is at that temperature.`, x: `Water ice is Titan's bedrock. The "rocks" here are ice.` },
+    { r: `Huygens probe data suggest an <b>ocean</b> 55 to 80 km below the icy ground.<br>NASA: Titan could potentially harbor environments suitable for life, but there is so far no evidence of life.`,
+      q: `Titan has two kinds of liquid. Which is more like the liquid life uses on Earth?`, o: ['The buried water ocean', 'The methane seas'], a: 0,
+      h: `What liquid does all known life use?`, x: `The water ocean is the Earth-like one, but it is buried deep. NASA's Dragonfly rotorcraft is headed to Titan to study its chemistry.` },
+  ],
+  life: { water: ['yes', 'maybe'], chem: ['yes'], energy: ['maybe', 'yes'], rating: 'worth', alt: ['top'],
+    why: { water: `A buried water ocean, plus methane lakes on top.`, chem: `Rich in organic molecules.`, energy: `Dim sunlight and chemical energy from organics.`,
+      rating: `NASA: Titan could harbor environments suitable for life, but so far no evidence. A strong candidate.` } },
+},
+{
+  id: 'uranus', name: 'Uranus', kind: 'Ice giant', au: 19.2, g: 8.69, deck: true, tools: DECK_TOOLS,
+  intro: `Uranus, the sideways planet. PEBBLES asks that you pronounce it however you like, as long as you don't giggle on the open channel.`,
+  src: [['Uranus: Facts', 'https://science.nasa.gov/uranus/facts/']],
+  scans: [
+    { r: `Atmosphere: mostly <b>hydrogen and helium</b> with a small amount of <b>methane</b>. Methane absorbs red light.`,
+      q: `Why does Uranus look blue-green?`, o: ['Methane absorbs red light, leaving blue-green', 'It is covered in oceans', 'It reflects Neptune'], a: 0,
+      h: `Which color does methane remove?`, x: `Take red out of sunlight and what bounces back looks blue-green.` },
+    { r: `Most of the planet is a hot, dense fluid of <b>"icy" materials: water, methane and ammonia</b>, above a small rocky core.`,
+      q: `Why call it an "ice giant" if its interior is hot?`, o: ['Planetary scientists call water, methane and ammonia "ices" whatever their state', 'It is frozen solid', 'It is covered in snow'], a: 0,
+      h: `"Ice" here means a kind of material, not a temperature.`, x: `In planetary science, "ices" are the materials, not their state.` },
+    { r: `Tilt: <b>97.77°</b>. Coldest atmosphere: <b>-224 °C</b> (49 K). One orbit takes about <b>84 Earth years</b>.`,
+      q: `With a tilt near 98°, what happens at Uranus's poles?`, o: ['Each gets decades of sunlight, then decades of darkness', 'Nothing, Uranus has no seasons', 'They are always in sunlight'], a: 0,
+      h: `It spins on its side as it orbits.`, x: `Each pole gets about 42 years of daylight followed by 42 years of night.` },
+    { r: `<b>28</b> known moons, named after characters by Shakespeare and Alexander Pope. <b>13</b> faint rings. A day lasts about 17 hours.<br>NASA: Uranus's environment is not conducive to life as we know it.`,
+      q: `A 20-year-old student is how many Uranus years old?`, o: ['Less than 1', 'About 4', 'About 84'], a: 0,
+      h: `One Uranus year is 84 Earth years.`, x: `Not even one. You would still be waiting for your first birthday.` },
+  ],
+  life: { water: ['maybe', 'no'], chem: ['maybe', 'yes'], energy: ['maybe', 'no'], rating: 'unlikely', alt: [],
+    why: { water: `Water deep inside, but as a hot, dense fluid under crushing pressure.`, chem: `Methane, ammonia and water.`, energy: `Very little sunlight.`,
+      rating: `NASA: "Uranus' environment is not conducive to life as we know it."` } },
+},
+{
+  id: 'neptune', name: 'Neptune', kind: 'Ice giant', au: 30, g: 11.15, deck: true, tools: DECK_TOOLS,
+  intro: `Neptune, the windiest planet, about 30 times farther from the Sun than Earth. Hold onto the railing.`,
+  src: [['Neptune: Facts', 'https://science.nasa.gov/neptune/neptune-facts/']],
+  scans: [
+    { r: `Atmosphere: mostly <b>hydrogen and helium</b> with just a little bit of <b>methane</b>.`,
+      q: `Neptune is blue for the same reason as Uranus. Which gas causes it?`, o: ['Methane', 'Oxygen', 'Helium'], a: 0,
+      h: `It absorbs red light.`, x: `Methane again.` },
+    { r: `More than <b>80%</b> of Neptune's mass is a hot, dense fluid of <b>water, methane and ammonia</b> above a small rocky core.`,
+      q: `What separates ice giants like Neptune from gas giants like Jupiter?`, o: ['Ice giants are mostly water, methane and ammonia, with less hydrogen and helium', 'Ice giants are frozen solid', 'Ice giants are bigger'], a: 0,
+      h: `Compare what each is mostly made of.`, x: `Jupiter and Saturn are mostly hydrogen and helium; Uranus and Neptune are mostly "ices."` },
+    { r: `Winds: more than <b>2,000 km/h</b>, about nine times Earth's strongest. Sunlight takes about <b>4 hours</b> to arrive.`,
+      q: `Neptune gets very little sunlight, yet has the fastest winds. What does that suggest?`, o: ['Something besides sunlight, like internal heat, helps power its weather', 'Winds need no energy', 'Sunlight is stronger out here'], a: 0,
+      h: `Winds need energy from somewhere.`, x: `Neptune gives off more heat than it gets from the Sun, which helps drive its winds.` },
+    { r: `Neptune was the first planet found by <b>mathematical prediction</b>: Urbain Le Verrier calculated where it should be from odd motions of Uranus, and Johann Galle found it in 1846.<br>NASA: Neptune's environment is not conducive to life as we know it.`,
+      q: `What did Le Verrier detect, before anyone saw Neptune?`, o: ['Its gravity tugging on Uranus', 'Its light', 'Radio signals'], a: 0,
+      h: `What makes one planet tug on another?`, x: `Gravity. Neptune was found with a pencil before a telescope.` },
+  ],
+  life: { water: ['maybe', 'no'], chem: ['maybe', 'yes'], energy: ['maybe', 'no'], rating: 'unlikely', alt: [],
+    why: { water: `Deep fluid water under crushing pressure.`, chem: `Methane, ammonia and water.`, energy: `Some internal heat, almost no sunlight.`,
+      rating: `NASA: Neptune's environment is "not conducive to life as we know it."` } },
+},
+{
+  id: 'triton', name: 'Triton', kind: 'Moon of Neptune', parent: 'neptune', au: 30, g: 0.78, tools: TOOLS,
+  intro: `Triton, Neptune's largest moon, and one of the coldest places ever measured. Those dark plumes are geysers. Neptune hangs in the sky like a giant blue marble.`,
+  src: [['Triton', 'https://science.nasa.gov/neptune/moons/triton/'], ['Neptune: Facts', 'https://science.nasa.gov/neptune/neptune-facts/'], ['Ocean Worlds: Triton', 'https://science.nasa.gov/resource/ocean-worlds-triton/']],
+  scans: [
+    { r: `A thin atmosphere, <b>mostly nitrogen</b> with small amounts of <b>methane</b>.`,
+      q: `Triton's main gas is also the main gas in which planet's air?`, o: ['Earth', 'Mars', 'Venus'], a: 0,
+      h: `What is 78% of the air you are breathing?`, x: `Nitrogen. Earth, Titan, Triton and Pluto all have nitrogen-rich air, though Triton's is extremely thin.` },
+    { r: `A <b>frozen nitrogen crust</b> over an icy mantle, around a rock-and-metal core. Smooth volcanic plains, mounds and round pits made by <b>icy lava flows</b>.`,
+      q: `On Triton, what erupts instead of molten rock?`, o: ['Icy material', 'Basalt lava', 'Liquid iron'], a: 0,
+      h: `The lava flows are described as icy.`, x: `This is cryovolcanism: volcanism with ice and frozen gases instead of hot rock.` },
+    { r: `Surface: <b>-235 °C</b> (-391 °F). Voyager 2 found <b>active geysers</b> in 1989, spewing icy material more than <b>8 km</b> high. NASA's ocean worlds page says the geysers spew nitrogen gas.`,
+      q: `What do active geysers tell you about Triton?`, o: ['It is still geologically active', 'It is a dead world', 'It is warmer than Earth'], a: 0,
+      h: `Something is erupting right now.`, x: `Even at -235 °C, Triton is changing today. Seasonal sunlight may help drive the activity.` },
+    { r: `Triton is the <b>only large moon with a retrograde orbit</b>, moving opposite to Neptune's spin. Scientists think Neptune's gravity <b>captured it from the Kuiper Belt</b>. A subsurface ocean is <b>unconfirmed</b>.`,
+      q: `A backwards orbit suggests Triton...`, o: ['Formed elsewhere and was captured by Neptune', 'Formed alongside Neptune', 'Broke off from Uranus'], a: 0,
+      h: `Moons that form with their planet orbit the same way it spins.`, x: `Triton is probably a Kuiper Belt object, a cousin of Pluto, that wandered too close to Neptune.` },
+  ],
+  life: { water: ['maybe', 'no'], chem: ['maybe', 'yes'], energy: ['maybe', 'no'], rating: 'unlikely', alt: ['worth'],
+    why: { water: `Any ocean is unconfirmed.`, chem: `Nitrogen, methane and ices.`, energy: `Faint sunlight; some internal activity powers the geysers.`,
+      rating: `Too cold, and NASA lists its ocean as unconfirmed. Fascinating geology, a long shot for life.` } },
+},
+{
+  id: 'pluto', name: 'Pluto', kind: 'Dwarf planet, Kuiper Belt', au: 39, g: 0.62, tools: TOOLS,
+  intro: `Pluto, out in the Kuiper Belt. NASA's New Horizons flew past in 2015 and found a world with glaciers, mountains and a giant heart. PEBBLES is still upset about 2006.`,
+  src: [['Pluto: Facts', 'https://science.nasa.gov/dwarf-planets/pluto/facts/'], ['New Horizons Finds Evidence of Recent Liquid on Pluto\'s Surface', 'https://science.nasa.gov/blogs/science-news/2026/08/05/nasas-new-horizons-finds-evidence-of-recent-liquid-on-plutos-surface/']],
+  scans: [
+    { r: `A thin atmosphere of <b>nitrogen</b>, with methane and carbon monoxide. It expands when Pluto is closer to the Sun and collapses when it is farther. Much of it <b>may freeze and fall as snow</b>.`,
+      q: `Why would Pluto's air freeze and fall as snow?`, o: ['Farther from the Sun it gets cold enough for the gases to freeze', 'Charon pulls it down', 'Volcanoes suck it back in'], a: 0,
+      h: `What changes as Pluto moves away from the Sun?`, x: `Pluto's orbit carries it from about 30 to 49 AU, so its air comes and goes with the seasons.` },
+    { r: `Plains of <b>frozen nitrogen</b> show no craters. The mountains are <b>big blocks of water ice</b>, sometimes coated with frozen methane.`,
+      q: `How can water ice build mountains on Pluto?`, o: ['At Pluto\'s temperatures, water ice is as hard as rock', 'The mountains are frozen lava', 'Pluto has no gravity'], a: 0,
+      h: `NASA says water there is "essentially rock-like."`, x: `On Pluto, water ice is the bedrock, and softer nitrogen ice flows around it like glaciers.` },
+    { r: `Average temperature: <b>-232 °C</b> (-387 °F). One orbit takes <b>248 years</b>; average distance <b>39 AU</b>. Pluto is about two-thirds the diameter of Earth's Moon. It became a <b>dwarf planet in 2006</b> because other objects might cross its orbit.`,
+      q: `Why did the IAU reclassify Pluto as a dwarf planet?`, o: ['It shares its orbital zone with other Kuiper Belt objects', 'It is made of ice', 'It is too far from the Sun'], a: 0,
+      h: `Read the last sentence of the reading.`, x: `A full planet clears its orbital zone. Pluto travels with many other icy Kuiper Belt bodies.` },
+    { r: `A 2026 study of New Horizons images found the <b>first evidence of recently flowing liquid on Pluto</b>: dark features at the edge of the Sputnik Planitia nitrogen glacier may be wetted now and then, most likely by <b>liquid nitrogen</b> rising from below. Some think an ocean could exist deep inside.<br>NASA: life there is unlikely because of the cold.`,
+      q: `Pluto may have liquid at its surface. Does that make it a good home for life?`, o: ['No, it is liquid nitrogen at around -200 °C, not water', 'Yes, any liquid will do', 'Yes, because the surface is warm'], a: 0,
+      h: `Which liquid does life as we know it need?`, x: `Liquid nitrogen is a new and exciting discovery, but life as we know it needs liquid water.` },
+  ],
+  life: { water: ['maybe', 'no'], chem: ['maybe', 'yes'], energy: ['no', 'maybe'], rating: 'unlikely', alt: ['worth'],
+    why: { water: `A deep ocean is possible but unproven; the surface liquid is nitrogen.`, chem: `Nitrogen, methane, carbon monoxide and water ice.`, energy: `Sunlight is about 1,500 times dimmer than at Earth.`,
+      rating: `NASA: "it's unlikely that life could exist there" because of the surface cold.` } },
+},
+{
+  id: 'comet', name: 'A comet', kind: 'Comet nucleus', au: 1.3, g: 0.0004, tools: ['Spectrometer', 'Ice drill', 'Thermo-barometer', 'Life scanner'],
+  intro: `You have landed on a comet nucleus a few kilometers across as it swings near the Sun. Gravity is so weak that a hard jump could launch you into space. PEBBLES has clipped you to a safety rope.`,
+  src: [['Comet Facts', 'https://science.nasa.gov/solar-system/comets/facts/']],
+  scans: [
+    { r: `Near the Sun, a comet develops an atmosphere, the <b>coma</b>, which may stretch hundreds of thousands of km. Comets grow <b>two tails</b>: a dust tail and an ion (gas) tail. Sunlight and the solar wind blow dust and gas away from the Sun.`,
+      q: `Which way do a comet's tails point?`, o: ['Away from the Sun', 'Behind the comet, opposite its motion', 'Toward the Sun'], a: 0,
+      h: `What is pushing the dust and gas?`, x: `Tails point away from the Sun, so a comet leaving the Sun travels tail first.` },
+    { r: `The nucleus is <b>mostly ice coated with dark organic material</b>: icy chunks and frozen gases with bits of dust. Nuclei are often a few miles across. NASA calls them "dirty snowballs."`,
+      q: `Why is a comet nucleus so dark if it is mostly ice?`, o: ['The ice is coated with dark organic material', 'It is burned black by the Sun', 'It is made of coal'], a: 0,
+      h: `Read the first line of the reading.`, x: `A thin crust of dark, carbon-rich dust hides the ice. Comet nuclei are among the darkest objects in the solar system.` },
+    { r: `Short-period comets orbit the Sun in <b>less than 200 years</b> and come from the <b>Kuiper Belt</b> beyond Neptune. Long-period comets come from the <b>Oort Cloud</b>, about 100,000 AU away, and can take up to 30 million years per orbit.`,
+      q: `Halley's Comet returns every 76 years. Where did it most likely come from?`, o: ['The Kuiper Belt (short-period comets)', 'The Oort Cloud (long-period comets)', 'The asteroid belt'], a: 0,
+      h: `76 years is less than 200.`, x: `Short-period comets come from the nearer reservoir. Oort Cloud comets may visit once in human history, if ever.` },
+    { r: `Comets carry <b>organic compounds, the building blocks of life</b>, and may have brought <b>water and organic compounds to the early Earth</b>. Stardust flew 236 km from Comet Wild 2 in 2004; Deep Impact hit Comet Tempel 1 in 2005.`,
+      q: `How might comets matter for life on Earth?`, o: ['They may have delivered water and organic building blocks', 'They are alive themselves', 'They shade Earth from sunlight'], a: 0,
+      h: `What do comets carry?`, x: `Comets are frozen leftovers from the birth of the solar system, and maybe part of the recipe for Earth's oceans and life.` },
+  ],
+  life: { water: ['no', 'maybe'], chem: ['yes'], energy: ['maybe', 'yes'], rating: 'unlikely', alt: [],
+    why: { water: `Ice and vapor, but no liquid water.`, chem: `Rich in organic compounds, the building blocks of life.`, energy: `Sunlight when it passes close, then darkness for years.`,
+      rating: `Comets carry life's ingredients rather than life. They may have helped start life on Earth.` } },
+},
+];
+const W = Object.fromEntries(WORLDS.map(w => [w.id, w]));
+const NEXT_STOPS = [];
+
+const AWARDS = [
+  { id: 'first', name: 'First Reading', d: 'Use your first instrument.', icon: '📡' },
+  { id: 'home', name: 'Home Base', d: 'Assess Earth.', icon: '🌍' },
+  { id: 'sun', name: 'Sunburnt', d: 'Assess the Sun.', icon: '☀️' },
+  { id: 'rocky', name: 'Rocky Road', d: 'Assess Mercury, Venus, Earth, the Moon and Mars.', icon: '⛰️' },
+  { id: 'belt', name: 'Belt Buckle', d: 'Assess Ceres and Vesta in the asteroid belt.', icon: '🪨' },
+  { id: 'acid', name: 'Do Not Lick', d: 'Assess Venus.', icon: '🧪' },
+  { id: 'lava', name: 'Lava Lover', d: 'Assess Io.', icon: '🌋' },
+  { id: 'gas', name: 'Gas Giant Gazer', d: 'Assess Jupiter and Saturn.', icon: '🪐' },
+  { id: 'ice', name: 'Ice Giant Investigator', d: 'Assess Uranus and Neptune.', icon: '🧊' },
+  { id: 'ocean', name: 'Ocean Worlds', d: 'Assess Europa, Enceladus and Titan.', icon: '🌊' },
+  { id: 'galilean', name: 'Galilean Grand Slam', d: 'Assess all four of Galileo\'s moons: Io, Europa, Ganymede and Callisto.', icon: '🔭' },
+  { id: 'kuiper', name: 'Kuiper Belt Cruiser', d: 'Assess Triton and Pluto.', icon: '❄️' },
+  { id: 'snowball', name: 'Dirty Snowball', d: 'Assess the comet.', icon: '☄️' },
+  { id: 'sharp', name: 'Sharp Eye', d: 'Answer all four questions at one world on the first try.', icon: '🔍' },
+  { id: 'perfect', name: 'Perfect Read', d: 'Match the NASA-based answer on every part of one life assessment.', icon: '🎯' },
+  { id: 'astro', name: 'Astrobiologist', d: 'Get five perfect life assessments.', icon: '🧬' },
+  { id: 'hopper', name: 'Moon Hopper', d: 'Jump on three low-gravity worlds.', icon: '🦘' },
+  { id: 'tour', name: 'Grand Tour', d: 'Visit every stop on the map.', icon: '🚀' },
+  { id: 'star', name: 'Bright Star', d: 'Earn 1,000 points.', icon: '⭐' },
+  { id: 'done', name: 'Mission Complete', d: 'Assess every stop and file your mission report.', icon: '🏆' },
+];
+
+</script>
+<script>
+/* ================= Helpers and saved state ================= */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+const plain = (html) => { const d = document.createElement('div'); d.innerHTML = String(html).replace(/<br\s*\/?>/g, ' '); return d.textContent.replace(/\s+/g, ' ').trim(); };
+const lightTime = (au) => { const m = au * 8.3; return m < 60 ? `about ${m < 10 ? m.toFixed(1) : Math.round(m)} minutes` : `about ${(m / 60).toFixed(1)} hours`; };
+const inText = (w) => w.id === 'comet' ? 'this comet' : w.name;
+const gPct = (g) => { const p = g / 9.81 * 100; return p < 1 ? 'less than 1%' : Math.round(p) + '%'; };
+const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const PKEY = 'ssa-progress', SKEY = 'ssa-settings';
+const blank = () => ({ score: 0, scans: {}, assessed: {}, visited: [], hops: [], awards: [] });
+let prog = blank();
+try { prog = Object.assign(blank(), JSON.parse(localStorage.getItem(PKEY) || '{}')); } catch (e) {}
+const saveProg = () => { try { localStorage.setItem(PKEY, JSON.stringify(prog)); } catch (e) {} };
+const settings = { voice: false, rate: 1, name: '', sfx: true, music: true, look: 1, gfx: 'normal' };
+try { Object.assign(settings, JSON.parse(localStorage.getItem(SKEY) || '{}')); } catch (e) {}
+const saveSettings = () => { try { localStorage.setItem(SKEY, JSON.stringify(settings)); } catch (e) {} };
+const scansOf = (id) => prog.scans[id] || (prog.scans[id] = [0, 0, 0, 0]);
+const scanCount = (id) => (prog.scans[id] || []).filter(Boolean).length;
+const status = (id) => prog.assessed[id] ? 2 : scanCount(id) ? 1 : 0;
+
+/* ================= Voice narration =================
+   Read-aloud uses the browser's built-in speech. Everything spoken is also shown as a caption and written to a
+   polite live region, so students who can't hear it (or whose browser has no voices) get the same narration. */
+const SS = window.speechSynthesis;
+const canSpeak = !!SS && typeof SpeechSynthesisUtterance === 'function';
+const voice = { last: '', status: canSpeak ? '' : 'This browser has no built-in speech, so narration appears as captions instead.' };
+if (!canSpeak) settings.voice = false;
+let voices = [];
+const NATURAL = /natural|neural|premium|enhanced|siri/i;
+const NOVELTY = /eSpeak|compact|Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Junior|Ralph|Kathy|Fred|Grandma|Grandpa|Rocko|Shelley|Flo|Eddy|Reed|Sandy/i;
+// Online voices (Edge's Natural voices, Chrome's Google voices) now and then fail to answer for a moment. When that
+// happens the line is tried once more, then a built-in voice reads it while online voices rest for a little while
+// (20 seconds, longer if they keep failing), and then the game goes back to them. Picking a voice or Test voice ends the rest.
+let restUntil = 0, restLen = 0;
+const benched = (v) => !!v && !v.localService && (performance.now() < restUntil || navigator.onLine === false);
+const isNatural = (v) => NATURAL.test(v.name) || /^Google/i.test(v.name);
+function voiceScore(v) {
+  let s = /^en[-_]US/i.test(v.lang) ? 3 : /^en/i.test(v.lang) ? 2 : 0;
+  if (NATURAL.test(v.name)) s += 10; else if (/^Google/i.test(v.name)) s += 7;
+  if (NOVELTY.test(v.name)) s -= 8;
+  if (benched(v)) s -= 50;
+  return s;
+}
+const ranked = () => voices.filter(v => /^en/i.test(v.lang)).sort((a, b) => voiceScore(b) - voiceScore(a));
+const bestVoice = () => ranked()[0] || voices[0] || null;
+const shortName = (v) => v.name.replace(/^Microsoft\s+/, '').replace(/\s+Online\s*\(Natural\)/i, '').replace(/\s+-\s+.*$/, '') || v.name;
+function loadVoices() {
+  let fresh = []; try { fresh = SS.getVoices() || []; } catch (e) {}
+  // a refreshed list that leaves out online voices it gave before keeps them; if they really are gone, speaking fails over
+  if (fresh.length) voices = fresh.concat(voices.filter(v => !v.localService && !fresh.some(f => f.name === v.name)));
+  renderVoicePick();
+}
+function renderVoicePick() {
+  const sel = $('#voicePick'); if (!sel) return;
+  const en = ranked(), best = bestVoice();
+  const opt = v => `<option value="${esc(v.name)}">${esc(shortName(v))} (${v.lang})${isNatural(v) ? ' · natural' : ''}</option>`;
+  sel.innerHTML = `<option value="">Automatic${best ? ` (${esc(shortName(best))})` : ''}</option>` + en.map(opt).join('');
+  sel.value = voices.some(v => v.name === settings.name) ? settings.name : '';
+  $('#voicePickRow').hidden = !voices.length;
+}
+if (canSpeak) { loadVoices(); try { SS.addEventListener('voiceschanged', loadVoices); } catch (e) { SS.onvoiceschanged = loadVoices; } }
+const pickVoice = () => { const v = settings.name && voices.find(x => x.name === settings.name); return v && !benched(v) ? v : bestVoice(); };
+// Long utterances get cut off in some browsers, so speak sentence by sentence.
+const chunks = (t) => (t.match(/[^.!?]+[.!?]+["')]*\s*|[^.!?]+$/g) || [t]).reduce((acc, c) => {
+  if (acc.length && (acc[acc.length - 1] + c).length < 180) acc[acc.length - 1] += c; else acc.push(c); return acc; }, []).map(c => c.trim()).filter(Boolean);
+let speechGen = 0, holdUntil = 0;
+function setVoiceStatus(msg) { voice.status = msg; const el = $('#voiceStatus'); if (el) { el.textContent = msg; el.hidden = !msg; } }
+const NET_ERR = ['network', 'synthesis-failed', 'synthesis-unavailable', 'voice-unavailable', 'language-unavailable'];
+// Lines are spoken one chunk at a time, so a chunk that fails can be tried again in its place without losing the rest.
+const talk = []; let talking = null;
+function enqueue(text, gen) {
+  if (gen !== speechGen) return;
+  if (talking && talking.gen !== speechGen) talking = null; // a cancelled chunk that never reported back
+  chunks(text).forEach(c => talk.push({ c, gen, tries: 0 }));
+  if (!talking) pump();
+}
+function pump() {
+  if (talking) return;
+  while (talk.length && talk[0].gen !== speechGen) talk.shift();
+  const job = talking = talk.shift() || null; if (!job) return;
+  try { SS.resume(); } catch (e) {}
+  const v = job.local ? ranked().find(x => x.localService) || null : pickVoice(), online = !!v && !v.localService;
+  const u = job.u = new SpeechSynthesisUtterance(job.c); // holding on to it stops Chrome losing its events
+  if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'en-US';
+  u.rate = Math.min(2, settings.rate);
+  let started = false, over = false;
+  const done = (again, delay) => {
+    if (over) return; over = true; clearTimeout(job.t);
+    if (talking !== job) return;
+    if (again) talk.unshift(job);
+    talking = null; setTimeout(pump, delay || 0);
+  };
+  // the online voice did not answer: try it once more, then let a built-in voice read this chunk
+  const failed = () => {
+    if (job.tries++ < 1) return done(true, 300);
+    restLen = Math.min(300000, restLen ? restLen * 2 : 20000); restUntil = performance.now() + restLen;
+    job.local = true; voice.fellBack = true; renderVoicePick();
+    setVoiceStatus(navigator.onLine === false ? `The ${shortName(v)} voice needs an internet connection, so a built-in voice is reading instead.`
+      : `The ${shortName(v)} voice did not answer, so a built-in voice is reading for now. The game will switch back to ${shortName(v)} shortly.`);
+    done(true, 80);
+  };
+  // some browsers drop the end event now and then, so notice when speech has quietly stopped
+  const check = () => { if (over) return; if (SS.speaking) job.t = setTimeout(check, 1500); else done(); };
+  u.onstart = () => {
+    started = true; clearTimeout(job.t); job.t = setTimeout(check, 1500);
+    if (online) { restLen = 0; voice.fellBack = false; }
+    if (voice.status && !voice.fellBack) setVoiceStatus('');
+  };
+  u.onend = () => done();
+  u.onerror = (e) => {
+    if (e.error === 'interrupted' || e.error === 'canceled' || job.gen !== speechGen) return done();
+    if (online && NET_ERR.includes(e.error)) return failed();
+    setVoiceStatus(e.error === 'not-allowed' ? 'Your browser blocked speech until you click or press a key. Press V or click Test voice.'
+      : `Speech stopped with an error (${e.error}). Captions will keep showing the narration.`);
+    done();
+  };
+  job.t = setTimeout(() => {
+    if (over || started || job.gen !== speechGen || !settings.voice) return;
+    if (SS.speaking) { started = true; return check(); }
+    try { SS.cancel(); } catch (e) {}
+    if (online) return failed();
+    loadVoices();
+    setVoiceStatus(voices.length ? 'Your browser did not start speaking. Check that your sound is on, then press Test voice. Captions show the narration meanwhile.'
+        : 'No speech voices are installed in this browser. Captions show the narration instead.');
+    done();
+  }, online ? 6000 : 3000);
+  SS.speak(u);
+}
+function say(text, queue = false) {
+  text = plain(text);
+  voice.last = queue && voice.last ? voice.last + ' ' + text : text;
+  $('#sr').textContent = text;
+  showCaption(text, queue);
+  if (!settings.voice || !canSpeak) return;
+  try {
+    const gen = queue ? speechGen : ++speechGen, wait = holdUntil - performance.now();
+    // cancel() followed at once by speak() is dropped by some browsers, so give it a moment
+    if (!queue && (SS.speaking || SS.pending)) { SS.cancel(); holdUntil = performance.now() + 80; setTimeout(() => enqueue(text, gen), 80); }
+    else if (queue && wait > 0) setTimeout(() => enqueue(text, gen), wait + 5);
+    else enqueue(text, gen);
+  } catch (e) { setVoiceStatus('Speech is not available here. Captions show the narration instead.'); }
+}
+let captionT = 0;
+function showCaption(text, queue) {
+  const c = $('#caption'); if (!settings.voice) return;
+  c.textContent = queue && !c.hidden ? c.textContent + ' ' + text : text;
+  c.hidden = false;
+  clearTimeout(captionT);
+  captionT = setTimeout(() => { c.hidden = true; }, Math.min(22000, 3000 + c.textContent.length * 55 / settings.rate));
+}
+function hush() { try { speechGen++; SS && SS.cancel(); } catch (e) {} }
+function renderVoice() {
+  $$('.voice-toggle').forEach(b => b.setAttribute('aria-pressed', String(settings.voice)));
+  $('#voiceTitle').textContent = settings.voice ? 'Turn off voice narration' : 'Turn on voice narration';
+  $('#voiceMap').textContent = `Voice narration: ${settings.voice ? 'on' : 'off'}`;
+  $('#voiceHud').innerHTML = `<kbd>V</kbd> Voice ${settings.voice ? 'on' : 'off'}`;
+  $('#voiceTest').hidden = !settings.voice;
+  $('#voiceRate').value = String(settings.rate);
+  $('#sfxBtn').textContent = `Sound effects: ${settings.sfx ? 'on' : 'off'}`; $('#sfxBtn').setAttribute('aria-pressed', String(settings.sfx));
+  $('#musicBtn').textContent = `Music: ${settings.music ? 'on' : 'off'}`; $('#musicBtn').setAttribute('aria-pressed', String(settings.music));
+  $('#lookSpeed').value = String(settings.look); $('#gfxMode').value = settings.gfx;
+  setVoiceStatus(voice.status);
+  if (!settings.voice) $('#caption').hidden = true;
+}
+function setVoice(on) {
+  settings.voice = !!on && canSpeak; saveSettings();
+  if (!settings.voice) hush();
+  renderVoice();
+  if (settings.voice) say('Voice narration on. Press V to turn it off, and R to repeat. ' + hereSpeech());
+  else if (!canSpeak) setVoiceStatus(voice.status);
+}
+if (canSpeak) {
+  // Some browsers leave queued speech paused inside embedded pages. Nudge it, and go quiet when the page is hidden.
+  setInterval(() => { try { if (settings.voice && SS.pending && !SS.speaking) SS.resume(); if (settings.voice && SS.paused) SS.resume(); } catch (e) {} }, 400);
+  window.addEventListener('pagehide', hush);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) hush(); });
+}
+
+/* ================= Sound =================
+   Everything is synthesized with Web Audio: soft sine tones only, no noise, so nothing hisses. */
+let actx = null, master = null, musicBus = null;
+function ctx() {
+  try {
+    if (!actx) {
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      const comp = actx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4;
+      master = actx.createGain(); master.gain.value = .8; master.connect(comp); comp.connect(actx.destination);
+      musicBus = actx.createGain(); musicBus.gain.value = settings.music ? 1 : 0; musicBus.connect(master);
+    }
+    if (actx.state === 'suspended') actx.resume();
+  } catch (e) { return null; }
+  return actx;
+}
+function tone(f, t0, dur, vol = .15, type = 'sine', bus) {
+  const c = ctx(); if (!c) return;
+  const o = c.createOscillator(), g = c.createGain(), t = c.currentTime + t0;
+  o.type = type; o.frequency.setValueAtTime(f, t);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .015); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(g); g.connect(bus || master); o.start(t); o.stop(t + dur + .05);
+  return o;
+}
+const sfx = {
+  scan() { if (!settings.sfx) return; [880, 1175, 1568].forEach((f, i) => tone(f, i * .07, .18, .08, 'triangle')); },
+  right() { if (!settings.sfx) return; [660, 830, 990, 1320].forEach((f, i) => tone(f, i * .08, .35, .12)); },
+  wrong() { if (!settings.sfx) return; tone(220, 0, .25, .12, 'triangle'); tone(196, .15, .3, .1, 'triangle'); },
+  award() { if (!settings.sfx) return; [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, i * .1, .6, .1)); },
+  click() { if (!settings.sfx) return; tone(1200, 0, .05, .05, 'square'); },
+  jump() { if (!settings.sfx) return; const o = tone(300, 0, .3, .08); if (o) o.frequency.exponentialRampToValueAtTime(600, actx.currentTime + .25); },
+  warp() {
+    if (!settings.sfx) return; const c = ctx(); if (!c) return;
+    const o = c.createOscillator(), o2 = c.createOscillator(), g = c.createGain(), t = c.currentTime;
+    o.frequency.setValueAtTime(90, t); o.frequency.exponentialRampToValueAtTime(700, t + 1.8); o2.frequency.setValueAtTime(135, t); o2.frequency.exponentialRampToValueAtTime(1050, t + 1.8);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.07, t + .4); g.gain.exponentialRampToValueAtTime(.0001, t + 2.2);
+    o.connect(g); o2.connect(g); g.connect(master); o.start(t); o2.start(t); o.stop(t + 2.3); o2.stop(t + 2.3);
+  },
+};
+// A slow, calm pad for each place, with a soft bell now and then. Each world has its own key.
+const KEYS = { map: 50, sun: 52, mercury: 55, venus: 49, earth: 53, moon: 57, mars: 51, ceres: 54, jupiter: 45, io: 50, europa: 56, saturn: 47, enceladus: 58, titan: 48, uranus: 46, neptune: 44, vesta: 52, ganymede: 53, callisto: 41, triton: 60, pluto: 62, comet: 59 };
+const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+let music = { nodes: [], bell: 0, key: '' };
+function startMusic(key) {
+  if (music.key === key) return; stopMusic(); music.key = key;
+  const c = ctx(); if (!c) return;
+  const root = KEYS[key] || 50, t = c.currentTime;
+  [0, 7, 16, 12].forEach((iv, i) => {
+    const o = c.createOscillator(), g = c.createGain(), lfo = c.createOscillator(), lg = c.createGain();
+    o.frequency.value = mtof(root + iv); o.type = 'sine';
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.022 - i * .003, t + 3);
+    lfo.frequency.value = .05 + i * .03; lg.gain.value = .008; lfo.connect(lg); lg.connect(g.gain);
+    o.connect(g); g.connect(musicBus); o.start(); lfo.start();
+    music.nodes.push(o, lfo, g);
+  });
+  const scale = [0, 2, 4, 7, 9, 12, 14, 16];
+  const ring = () => { if (settings.music) tone(mtof(root + 24 + scale[Math.floor(Math.random() * scale.length)]), 0, 2.4, .025, 'sine', musicBus); music.bell = setTimeout(ring, 2500 + Math.random() * 3500); };
+  music.bell = setTimeout(ring, 2000);
+}
+function stopMusic() {
+  clearTimeout(music.bell);
+  const t = actx ? actx.currentTime : 0;
+  music.nodes.forEach(n => { try { if (n.gain) { n.gain.cancelScheduledValues(t); n.gain.setValueAtTime(n.gain.value, t); n.gain.linearRampToValueAtTime(0, t + .8); } else n.stop(t + 1); } catch (e) {} });
+  music.nodes = []; music.key = '';
+}
+function setMusic(on) { settings.music = on; saveSettings(); renderVoice(); if (musicBus) musicBus.gain.setTargetAtTime(on ? 1 : 0, actx.currentTime, .3); }
+
+/* ================= Screens, points, awards ================= */
+let screen = 'title', here = null;
+function show(id) { $$('.screen').forEach(s => s.classList.toggle('on', s.id === id)); screen = id; }
+const openModals = () => $$('.modal.on');
+function openModal(id) { const m = $('#' + id); m.classList.add('on'); exitLock(); setTimeout(() => { const f = m.querySelector('[data-autofocus]') || m.querySelector('button, a, select'); f && f.focus(); }, 30); }
+function closeModal(id) {
+  $('#' + id).classList.remove('on');
+  if (!openModals().length) { if (screen === 'world') $('#gl').focus(); else if (screen === 'map') { const s = document.querySelector(`#mapSvg [data-id="${lastStop}"]`); s && s.focus(); } }
+}
+document.addEventListener('click', (e) => { const c = e.target.closest('[data-close]'); if (c) closeModal(c.closest('.modal').id); });
+$$('.modal').forEach(m => m.addEventListener('mousedown', (e) => { if (e.target === m) closeModal(m.id); }));
+
+function addPoints(n) { prog.score += n; saveProg(); renderScore(); }
+function renderScore() {
+  $('#hudScore').textContent = prog.score; $('#mapScore').textContent = prog.score;
+  $('#mapAwards').textContent = prog.awards.length;
+}
+let awardQ = [], awardBusy = false;
+function grant(id) {
+  if (prog.awards.includes(id)) return;
+  prog.awards.push(id); saveProg(); renderScore();
+  awardQ.push(AWARDS.find(a => a.id === id)); if (!awardBusy) nextAward();
+}
+function nextAward() {
+  const a = awardQ.shift(); const el = $('#award');
+  if (!a) { awardBusy = false; return; }
+  awardBusy = true; sfx.award();
+  el.innerHTML = `<div style="color:var(--accent);font-size:.8em;font-weight:700;letter-spacing:.08em">AWARD EARNED</div><div style="font-size:1.15em;font-weight:800">${a.icon} ${a.name}</div><div style="color:var(--muted);font-size:.9em">${a.d}</div>`;
+  el.classList.remove('hide');
+  say(`Award earned: ${a.name}. ${a.d}`, true);
+  setTimeout(() => { el.classList.add('hide'); setTimeout(nextAward, 500); }, 4200);
+}
+function checkAwards() {
+  const A = (ids) => ids.every(i => prog.assessed[i]);
+  if (Object.values(prog.scans).some(s => s.some(Boolean))) grant('first');
+  if (A(['earth'])) grant('home');
+  if (A(['sun'])) grant('sun');
+  if (A(['mercury', 'venus', 'earth', 'moon', 'mars'])) grant('rocky');
+  if (A(['ceres', 'vesta'])) grant('belt');
+  if (A(['io', 'europa', 'ganymede', 'callisto'])) grant('galilean');
+  if (A(['triton', 'pluto'])) grant('kuiper');
+  if (A(['comet'])) grant('snowball');
+  if (A(['venus'])) grant('acid');
+  if (A(['io'])) grant('lava');
+  if (A(['jupiter', 'saturn'])) grant('gas');
+  if (A(['uranus', 'neptune'])) grant('ice');
+  if (A(['europa', 'enceladus', 'titan'])) grant('ocean');
+  if (Object.values(prog.scans).some(s => s.every(v => v === 1))) grant('sharp');
+  const perfect = Object.values(prog.assessed).filter(a => a.perfect).length;
+  if (perfect >= 1) grant('perfect');
+  if (perfect >= 5) grant('astro');
+  if (prog.hops.length >= 3) grant('hopper');
+  if (WORLDS.every(w => prog.visited.includes(w.id))) grant('tour');
+  if (prog.score >= 1000) grant('star');
+  if (A(WORLDS.map(w => w.id))) grant('done');
+}
+let toastT = 0;
+function toast(html, ms = 3500) { const t = $('#toast'); t.innerHTML = html; t.style.opacity = 1; clearTimeout(toastT); toastT = setTimeout(() => { t.style.opacity = 0; }, ms); }
+
+/* ================= Title ================= */
+function drawTitleStars() {
+  const c = $('#titleStars'), g = c.getContext('2d'); c.width = innerWidth; c.height = innerHeight;
+  let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 500; i++) { const b = r(); g.fillStyle = `rgba(255,255,255,${.25 + b * .75})`; g.beginPath(); g.arc(r() * c.width, r() * c.height, b * 1.4 + .2, 0, 7); g.fill(); }
+  // a ringed planet in the corner
+  const x = c.width * .82, y = c.height * .78, R = Math.min(c.width, c.height) * .12;
+  const grd = g.createLinearGradient(x - R, y - R, x + R, y + R); grd.addColorStop(0, '#f3d39a'); grd.addColorStop(1, '#6b4a22');
+  g.save(); g.translate(x, y); g.rotate(-.35);
+  g.strokeStyle = 'rgba(230,200,150,.55)'; g.lineWidth = R * .16; g.beginPath(); g.ellipse(0, 0, R * 2, R * .5, 0, Math.PI, 2 * Math.PI); g.stroke();
+  g.fillStyle = grd; g.beginPath(); g.arc(0, 0, R, 0, 7); g.fill();
+  g.beginPath(); g.ellipse(0, 0, R * 2, R * .5, 0, 0, Math.PI); g.stroke(); g.restore();
+}
+drawTitleStars(); addEventListener('resize', () => { if (screen === 'title') drawTitleStars(); });
+
+/* ================= Map ================= */
+const MAP_POS = {
+  sun: [0, 280, 0], mercury: [150, 280, 9], venus: [212, 280, 14], earth: [285, 280, 15], moon: [285, 400, 7], mars: [358, 280, 11],
+  vesta: [455, 185, 6], ceres: [452, 280, 8], jupiter: [565, 280, 40], io: [505, 400, 8], europa: [625, 400, 8], ganymede: [535, 478, 10], callisto: [600, 478, 9],
+  saturn: [700, 280, 33], enceladus: [680, 410, 6], titan: [755, 410, 11], uranus: [828, 280, 23], neptune: [935, 280, 22], triton: [935, 400, 7],
+  pluto: [1030, 280, 6], comet: [214, 94, 5],
+};
+const MAP_FILL = { sun: 'url(#gSun)', mercury: '#9c948c', venus: '#e8c27a', earth: 'url(#gEarth)', moon: '#c9c9c9', mars: '#c9572e', ceres: '#77736e',
+  jupiter: 'url(#gJup)', io: '#e6cf52', europa: '#e9dcc4', saturn: 'url(#gSat)', enceladus: '#ffffff', titan: '#d69a3c', uranus: '#9fe3e6', neptune: '#3d63d8',
+  vesta: '#a39887', ganymede: '#9c9184', callisto: '#5d544b', triton: '#e8cfc4', pluto: '#e3c7a6', comet: '#cfe8ff' };
+const STATUS_COL = ['#ff9a2e', '#5aa9ff', '#3fd28b'];
+let lastStop = 'earth';
+function renderMap() {
+  const svg = $('#mapSvg'), CX = -170, CY = 280;
+  let h = `<defs>
+    <radialGradient id="gSun" cx="1" cy=".5" r="1"><stop offset="0" stop-color="#fff6c8"/><stop offset=".5" stop-color="#ffc23d"/><stop offset="1" stop-color="#ff7a1a"/></radialGradient>
+    <linearGradient id="gEarth" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5fb4ff"/><stop offset=".55" stop-color="#2f6fd0"/><stop offset=".56" stop-color="#3f9a4f"/><stop offset="1" stop-color="#2a5fb0"/></linearGradient>
+    <linearGradient id="gJup" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9d6b4"/><stop offset=".3" stop-color="#c58f5a"/><stop offset=".45" stop-color="#f0e2c8"/><stop offset=".62" stop-color="#b97a4a"/><stop offset=".8" stop-color="#ead8b8"/><stop offset="1" stop-color="#a8754a"/></linearGradient>
+    <linearGradient id="gSat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3dfa9"/><stop offset=".5" stop-color="#d8b06a"/><stop offset="1" stop-color="#b98b4a"/></linearGradient>
+  </defs>`;
+  // faint orbits, centered on the Sun
+  ['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'].forEach(id => { h += `<circle cx="${CX}" cy="${CY}" r="${MAP_POS[id][0] - CX}" fill="none" stroke="#2a3366" stroke-width="1"/>`; });
+  // the asteroid belt
+  let s = 3; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 160; i++) { const a = (r() - .5) * 1.3, rad = 622 + (r() - .5) * 40; h += `<circle cx="${(CX + Math.cos(a) * rad).toFixed(1)}" cy="${(CY + Math.sin(a) * rad).toFixed(1)}" r="${(r() * 1.5 + .5).toFixed(1)}" fill="#8a7f70"/>`; }
+  h += `<text x="452" y="40" text-anchor="middle" class="small">Asteroid belt</text>`;
+  h += `<circle cx="${CX}" cy="${CY}" r="${MAP_POS.pluto[0] - CX}" fill="none" stroke="#2a3366" stroke-dasharray="3 5"/>`;
+  for (let i = 0; i < 120; i++) { const a = (r() - .5) * .5, rad = 1200 + (r() - .5) * 70; h += `<circle cx="${(CX + Math.cos(a) * rad).toFixed(1)}" cy="${(CY + Math.sin(a) * rad).toFixed(1)}" r="${(r() * 1.3 + .5).toFixed(1)}" fill="#7f93b0"/>`; }
+  h += `<text x="1030" y="40" text-anchor="middle" class="small">Kuiper Belt</text>`;
+  // a comet on a long, stretched orbit, its tail pointing away from the Sun
+  h += `<ellipse cx="600" cy="140" rx="600" ry="60" fill="none" stroke="#3a4a80" stroke-dasharray="2 5"/>`;
+  h += `<linearGradient id="gTail" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox"><stop offset="0" stop-color="#cfe8ff" stop-opacity=".9"/><stop offset="1" stop-color="#cfe8ff" stop-opacity="0"/></linearGradient>`;
+  h += `<polygon points="214,94 260,81 250,62" fill="url(#gTail)"/>`;
+  // moon tethers
+  WORLDS.filter(w => w.parent).forEach(w => { const [x, y] = MAP_POS[w.id], [px, py, pr] = MAP_POS[w.parent]; h += `<line x1="${px}" y1="${py + pr}" x2="${x}" y2="${y}" stroke="#3a4580" stroke-dasharray="4 4"/>`; });
+  WORLDS.forEach(w => {
+    const [x, y, rr] = MAP_POS[w.id], st = status(w.id), n = scanCount(w.id);
+    const label = `${w.name}, ${w.kind}. ${['Not started', `${n} of 4 readings`, 'Life assessment done'][st]}.`;
+    h += `<g class="stop" data-id="${w.id}" tabindex="0" role="button" aria-label="${esc(label)}">`;
+    if (w.id === 'sun') {
+      h += `<circle cx="-170" cy="280" r="250" fill="url(#gSun)"/><circle class="ring" cx="-170" cy="280" r="258" fill="none" stroke="${STATUS_COL[st]}" stroke-width="2"/>`;
+      h += `<text x="40" y="215" text-anchor="middle">The Sun</text>`;
+    } else {
+      if (w.id === 'saturn') h += `<ellipse cx="${x}" cy="${y}" rx="${rr * 1.9}" ry="${rr * .45}" fill="none" stroke="#e3c98f" stroke-width="5" opacity=".8" transform="rotate(-12 ${x} ${y})"/>`;
+      if (w.id === 'uranus') h += `<ellipse cx="${x}" cy="${y}" rx="${rr * .35}" ry="${rr * 1.6}" fill="none" stroke="#bfeff0" stroke-width="1.5" opacity=".6"/>`;
+      h += `<circle cx="${x}" cy="${y}" r="${rr}" fill="${MAP_FILL[w.id]}"/>`;
+      if (w.id === 'jupiter') h += `<ellipse cx="${x + 12}" cy="${y + 10}" rx="8" ry="5" fill="#c4532f"/>`;
+      h += `<circle class="ring" cx="${x}" cy="${y}" r="${rr + 7}" fill="none" stroke="${STATUS_COL[st]}" stroke-width="2.5" ${st === 0 ? 'stroke-dasharray="5 4"' : ''}/>`;
+      if (st === 2) h += `<text x="${x + rr + 4}" y="${y - rr - 2}" style="fill:#3fd28b;font-size:18px">✓</text>`;
+      const ty = w.parent ? y + rr + 20 : (['earth', 'jupiter', 'saturn', 'vesta'].includes(w.id) ? y - rr - 14 : y + rr + 24);
+      h += `<text x="${x}" y="${ty}" text-anchor="middle" ${w.parent || w.id === 'comet' || w.id === 'vesta' ? 'style="font-size:13px"' : ''}>${esc(w.id === 'comet' ? 'Comet' : w.name.replace("Earth's ", ''))}</text>`;
+      if (w.id === 'earth' && !prog.visited.length) h += `<text x="${x}" y="${y + rr + 26}" text-anchor="middle" class="small" style="fill:#ffb547">Start here</text>`;
+    }
+    h += `</g>`;
+  });
+  svg.innerHTML = h;
+  $$('.stop', svg).forEach(g => {
+    const id = g.dataset.id;
+    g.addEventListener('click', () => travel(id));
+    g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); travel(id); } });
+    g.addEventListener('mouseenter', () => stopInfo(id)); g.addEventListener('focus', () => { stopInfo(id); });
+  });
+  $('#stopList').innerHTML = WORLDS.map(w => {
+    const st = status(w.id), n = scanCount(w.id);
+    return `<li><button data-id="${w.id}"><span>${esc(w.name)}</span><span class="st ${['', 'part', 'done'][st]}">${st === 2 ? '✓ assessed' : n ? n + '/4 readings' : w.kind}</span></button></li>`;
+  }).join('');
+  $$('#stopList button').forEach(b => { b.addEventListener('click', () => travel(b.dataset.id)); b.addEventListener('focus', () => stopInfo(b.dataset.id)); });
+  $('#nextStops').textContent = NEXT_STOPS.join(', '); $('#nextStops').parentElement.hidden = !NEXT_STOPS.length;
+  $('#awardTotal').textContent = AWARDS.length;
+  renderScore();
+}
+function stopInfo(id) {
+  const w = W[id], st = status(id); lastStop = id;
+  const a = prog.assessed[id], rating = a ? RATINGS.find(r => r.k === a.ans.rating).label : null;
+  $('#stopInfo').innerHTML = `<b>${esc(w.name)}</b> · ${esc(w.kind)}<br>` +
+    (w.au ? `${w.au} AU from the Sun. Sunlight takes ${lightTime(w.au)} to get there.<br>` : `The star at the center of it all.<br>`) +
+    `Gravity: ${w.g} m/s² (${gPct(w.g)} of Earth's).<br>` +
+    `${['Not started yet.', `${scanCount(id)} of 4 readings taken.`, `You rated it: <b>${rating}</b>.`][st]}<br><span style="color:var(--muted);font-size:.9em">Click or press Enter to travel.</span>`;
+}
+function mapSpeech() {
+  const done = WORLDS.filter(w => prog.assessed[w.id]).length;
+  return `Flight plan. ${done} of ${WORLDS.length} stops assessed, ${prog.score} points. Use Tab to pick a stop and Enter to travel. ${prog.visited.length ? '' : 'Earth is a good first stop.'}`;
+}
+function hereSpeech() {
+  if (screen === 'world' && here) return arrivalSpeech();
+  if (screen === 'map') return mapSpeech();
+  return '';
+}
+function goMap() {
+  hush(); exitLock(); here = null; show('map'); renderMap(); startMusic('map');
+  const s = document.querySelector(`#mapSvg [data-id="${lastStop}"]`); setTimeout(() => s && s.focus({ preventScroll: true }), 30);
+  say(mapSpeech());
+}
+
+/* ================= Travel ================= */
+let warpRAF = 0, warpEnd = 0, warpTarget = null;
+function travel(id) {
+  const w = W[id]; lastStop = id; warpTarget = id; hush();
+  show('travel'); sfx.warp();
+  $('#travelTo').textContent = `Heading to ${w.id === 'comet' ? 'a comet' : w.name}`;
+  $('#travelFact').textContent = w.au ? `${w.au} AU from the Sun. Sunlight takes ${lightTime(w.au)} to get there. Luckily, PEBBLES's warp drive is faster.` : `Flying straight toward the Sun. PEBBLES is checking the heat shield. Twice.`;
+  say(`${$('#travelTo').textContent}. ${$('#travelFact').textContent}`);
+  const c = $('#warp'), g = c.getContext('2d'); c.width = innerWidth; c.height = innerHeight;
+  const stars = Array.from({ length: 400 }, () => ({ a: Math.random() * 6.283, d: Math.random() * .1 + .01, s: Math.random() * .8 + .4 }));
+  const t0 = performance.now(), dur = reduceMotion ? 1200 : 2600; warpEnd = t0 + dur;
+  cancelAnimationFrame(warpRAF);
+  const frame = (t) => {
+    const k = (t - t0) / dur, cx = c.width / 2, cy = c.height / 2, R = Math.hypot(cx, cy);
+    g.fillStyle = reduceMotion ? '#000' : 'rgba(0,0,0,.35)'; g.fillRect(0, 0, c.width, c.height);
+    if (!reduceMotion) stars.forEach(s => {
+      const sp = .004 + k * .03 * s.s; const d0 = s.d; s.d = Math.min(1.2, s.d * (1 + sp * 3) + sp * .05);
+      g.strokeStyle = `rgba(${200 + 55 * s.s},${220},255,${.5 + s.s * .5})`; g.lineWidth = s.s * 1.6;
+      g.beginPath(); g.moveTo(cx + Math.cos(s.a) * d0 * R, cy + Math.sin(s.a) * d0 * R); g.lineTo(cx + Math.cos(s.a) * s.d * R, cy + Math.sin(s.a) * s.d * R); g.stroke();
+      if (s.d > 1.1) { s.d = Math.random() * .05 + .01; s.a = Math.random() * 6.283; }
+    });
+    if (t >= warpEnd) { arrive(id); return; }
+    warpRAF = requestAnimationFrame(frame);
+  };
+  warpRAF = requestAnimationFrame(frame);
+}
+function skipWarp() { if (screen === 'travel' && warpTarget) { cancelAnimationFrame(warpRAF); arrive(warpTarget); } }
+function arrive(id) {
+  cancelAnimationFrame(warpRAF); warpTarget = null;
+  here = W[id];
+  if (!prog.visited.includes(id)) { prog.visited.push(id); saveProg(); }
+  show('world');
+  buildWorld(here);
+  startMusic(id);
+  renderTools();
+  $('#hudName').innerHTML = `<b>${esc(here.name)}</b> <span class="k">· ${esc(here.kind)}</span><br><span class="k">Gravity ${here.g} m/s² (${gPct(here.g)} of Earth's)</span>`;
+  $('#gl').focus();
+  say(arrivalSpeech());
+  checkAwards();
+}
+function arrivalSpeech() {
+  const n = scanCount(here.id), a = prog.assessed[here.id];
+  const next = a ? 'You have already assessed this world. Press M for the map.' : n === 4 ? 'All four readings are in. Press 5 for the life assessment.' : `Four instruments are set up around you, ${n} used so far. Press 1 to 4 to walk to one, or N for the next, then E to use it. Walk with W A S D.`;
+  return `${here.intro} ${next}`;
+}
+
+/* ================= 3D world ================= */
+let renderer, scene, camera, clock = new THREE.Clock(), worldObjs = { stations: [], anim: [] };
+const player = { x: 0, z: 0, y: 1.7, vy: 0, yaw: 0, pitch: 0, ground: true };
+let heightAt = () => 0, bound = 40;
+function initGL() {
+  if (renderer) return;
+  renderer = new THREE.WebGLRenderer({ canvas: $('#gl'), antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, gfx().pr));
+  // color-correct output with soft (Reinhard) tone mapping: lit sides fade smoothly into shade and bright
+  // highlights roll off instead of clipping. ACES was tried too, but it pushed Mars to fire-engine red.
+  renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.ReinhardToneMapping; renderer.toneMappingExposure = TONE_EXPOSURE;
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  camera = new THREE.PerspectiveCamera(70, 1, .1, 9000);
+  camera.rotation.order = 'YXZ';
+  const fit = () => { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); };
+  addEventListener('resize', fit); fit();
+  requestAnimationFrame(loop);
+}
+// --- noise ---
+function hash2(x, y, s) { let h = Math.imul(x | 0, 374761393) ^ Math.imul(y | 0, 668265263) ^ Math.imul(s | 0, 982451653); h = Math.imul(h ^ (h >>> 13), 1274126177); h ^= h >>> 16; return (h >>> 0) / 4294967296; }
+function vnoise(x, y, s) {
+  const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+  const a = hash2(xi, yi, s), b = hash2(xi + 1, yi, s), c = hash2(xi, yi + 1, s), d = hash2(xi + 1, yi + 1, s);
+  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+}
+function fbm(x, y, s, o = 4) { let t = 0, a = .5, f = 1, n = 0; for (let i = 0; i < o; i++) { t += a * vnoise(x * f, y * f, s + i * 17); n += a; f *= 2.03; a *= .5; } return t / n; }
+function rng(seed) { let s = seed >>> 0 || 1; return () => (s = Math.imul(s ^ (s >>> 15), 1 | s) + 0x6D2B79F5 >>> 0, ((s ^ (s >>> 14)) >>> 0) / 4294967296); }
+const seedOf = (id) => [...id].reduce((a, c) => a * 31 + c.charCodeAt(0), 7) >>> 0;
+const C = (hex) => new THREE.Color(hex);
+const TONE_EXPOSURE = 1.4;
+// Graphics quality: Fast draws fewer pixels and skips sun shadows (the soft patches under the
+// instruments stay) for older laptops, Normal is the standard look, Sharp uses the screen's full
+// resolution and crisper shadows.
+const GFX = { fast: { pr: 1, shadow: 0 }, normal: { pr: 2, shadow: 1024 }, sharp: { pr: 3, shadow: 2048 } };
+const gfx = () => GFX[settings.gfx] || GFX.normal;
+function applyGfx() {
+  if (!renderer) return;
+  renderer.setPixelRatio(Math.min(devicePixelRatio, gfx().pr)); renderer.setSize(innerWidth, innerHeight, false);
+  const dl = worldObjs.sun; if (!dl || !here || !ENV[here.id].sun) return;
+  const size = gfx().shadow, on = size > 0;
+  if (dl.shadow.map) { dl.shadow.map.dispose(); dl.shadow.map = null; }
+  if (on) dl.shadow.mapSize.set(size, size);
+  if (dl.castShadow !== on) { dl.castShadow = on; scene.traverse(o => { if (o.material) [].concat(o.material).forEach(m => { m.needsUpdate = true; }); }); }
+}
+// Ground and rocks are lit per pixel (Phong with no shine, so their colors match the old look) and the grain
+// texture doubles as a bump map, so crater rims and slopes show surface relief. Instruments and ice use
+// MeshStandard so they catch reflected light from the sky.
+const GROUND_BUMP = .05;
+// Colors in this file are written as screen (sRGB) colors. With sRGB output the renderer works in
+// linear light, so every color in a finished scene is converted once; unlit things (sky, glows,
+// labels, stars) are kept out of tone mapping so they show exactly as painted.
+const linColor = (c) => c && c.isColor && c.convertSRGBToLinear();
+function linearizeScene(sc) {
+  const seenM = new Set(), seenG = new Set();
+  linColor(sc.background); if (sc.fog) linColor(sc.fog.color);
+  sc.traverse(o => {
+    if (o.isLight) { linColor(o.color); linColor(o.groundColor); }
+    const g = o.geometry, ca = g && g.attributes && g.attributes.color;
+    if (ca && !seenG.has(g)) { seenG.add(g); const a = ca.array; for (let i = 0; i < a.length; i++) a[i] = a[i] <= .04045 ? a[i] / 12.92 : Math.pow((a[i] + .055) / 1.055, 2.4); ca.needsUpdate = true; }
+    if (o.material) [].concat(o.material).forEach(m => {
+      if (seenM.has(m)) return; seenM.add(m);
+      if (!m.userData.lin) { linColor(m.color); linColor(m.emissive); linColor(m.specular); }
+      if (m.isMeshBasicMaterial || m.isSpriteMaterial || m.isPointsMaterial) m.toneMapped = false;
+    });
+  });
+}
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+
+// --- canvas textures ---
+function canvasTex(w, h, draw, repeat = 1) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(repeat, repeat); t.anisotropy = 4; t.encoding = THREE.sRGBEncoding; return t;
+}
+function pixelTex(w, h, fn, repeat = 1) {
+  return canvasTex(w, h, (g) => {
+    const img = g.createImageData(w, h), d = img.data;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const c = fn(x / w, y / h), i = (y * w + x) * 4; d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; d[i + 3] = c[3] == null ? 255 : c[3]; }
+    g.putImageData(img, 0, 0);
+  }, repeat);
+}
+// tileable noise: sample on a torus-like wrap by blending
+const tileN = (u, v, f, s, o = 4) => { const a = fbm(u * f, v * f, s, o), b = fbm((u - 1) * f, v * f, s, o), c = fbm(u * f, (v - 1) * f, s, o), d = fbm((u - 1) * f, (v - 1) * f, s, o); return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v; };
+const grainTex = (seed) => pixelTex(128, 128, (u, v) => { const n = tileN(u, v, 16, seed, 3) * .6 + hash2(u * 128, v * 128, seed) * .4, k = 175 + n * 80; return [k, k, k]; }, 1);
+function bandTex(palette, seed, { turb = .06, bands = 9, spot = null, streaks = 0 } = {}) {
+  const cols = palette.map(C);
+  return pixelTex(512, 256, (u, v) => {
+    const t = tileN(u, v, 6, seed, 4), bandPos = (v * bands + t * turb * 40 + Math.sin(u * 6.283 * 2 + v * 20) * turb * 3) % 1;
+    const f = (Math.sin((v + t * turb) * bands * 6.283) * .5 + .5);
+    const i = Math.floor(((v * bands + t * turb * 30) % cols.length + cols.length) % cols.length), j = (i + 1) % cols.length;
+    const c = cols[i].clone().lerp(cols[j], f * .6 + bandPos * .2);
+    let k = .85 + tileN(u, v, 24, seed + 3, 3) * .3;
+    if (streaks && tileN(u * 3 % 1, v, 10, seed + 9, 3) > .62) k += .35 * streaks;
+    if (spot) { const dx = (u - spot[0]) / spot[2], dy = (v - spot[1]) / (spot[2] * .55), d = dx * dx + dy * dy; if (d < 1) { const sc = C(spot[3]); c.lerp(sc, (1 - d) * .9); } }
+    return [clamp(c.r * k * 255, 0, 255), clamp(c.g * k * 255, 0, 255), clamp(c.b * k * 255, 0, 255)];
+  }, 1);
+}
+function glowTex(inner = '#ffffff', mid = '#ffe9a8', outer = 'rgba(255,170,60,0)') {
+  return canvasTex(256, 256, (g, w) => { const r = g.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2); r.addColorStop(0, inner); r.addColorStop(.18, inner); r.addColorStop(.32, mid); r.addColorStop(1, outer); g.fillStyle = r; g.fillRect(0, 0, w, w); });
+}
+function labelTex(text, color) {
+  return canvasTex(128, 128, (g) => { g.fillStyle = 'rgba(0,0,0,.55)'; g.beginPath(); g.arc(64, 64, 52, 0, 7); g.fill(); g.lineWidth = 8; g.strokeStyle = color; g.stroke(); g.fillStyle = '#fff'; g.font = 'bold 64px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 64, 68); });
+}
+function skyTex(top, mid, horizon) {
+  return canvasTex(8, 256, (g, w, h) => { const l = g.createLinearGradient(0, 0, 0, h); l.addColorStop(0, top); l.addColorStop(.42, mid); l.addColorStop(.5, horizon); l.addColorStop(1, horizon); g.fillStyle = l; g.fillRect(0, 0, w, h); });
+}
+
+// --- what each world looks like ---
+const ENV = {
+  sun:      { deck: 'sun', sky: ['#1a0300', '#5a1200', '#ff7a1a'], fog: ['#ff8a2a', 300, 3500], light: ['#ffd9a0', 1.2], hemi: ['#ff9a40', '#ff5a00', .9] },
+  mercury:  { sky: ['#000000', '#000000', '#05050a'], stars: 1, ground: ['#8f877e', '#5c5650'], amp: 2.2, freq: .02, craters: 70, rocks: 40, sun: 3.0, light: ['#fffaf0', 1.5], hemi: ['#555566', '#222', .35] },
+  venus:    { sky: ['#5a3d10', '#c98a2e', '#e8b25a'], fog: ['#c98a3a', 6, 150], ground: ['#5e4a35', '#3a2e24'], amp: 2.5, freq: .02, craters: 0, rocks: 60, volcano: [[-220, -380, 520, 70]], sun: 0, light: ['#ffcf7a', .55], hemi: ['#e0a050', '#4a3018', .8] },
+  earth:    { sky: ['#2c6fd6', '#7fb6f0', '#cfe6ff'], fog: ['#cfe3f7', 60, 600], ground: ['#4f8a3a', '#7a6a3a'], amp: 3.5, freq: .018, craters: 0, rocks: 12, trees: 70, ocean: true, clouds: 1, sun: 1, light: ['#fff8e8', 1.15], hemi: ['#bcd8ff', '#3f5a2a', .6], moonInSky: true },
+  moon:     { sky: ['#000000', '#000000', '#05050a'], stars: 1, ground: ['#a8a8a6', '#6f6f6d'], amp: 1.6, freq: .025, craters: 60, rocks: 35, sun: 1, light: ['#ffffff', 1.4], hemi: ['#556', '#222', .3], earthInSky: true },
+  mars:     { sky: ['#4a2a1a', '#c98a5a', '#e8b98a'], fog: ['#d8a070', 50, 500], ground: ['#b5532a', '#7a3418'], amp: 2.8, freq: .02, craters: 8, rocks: 70, volcano: [[-480, -520, 520, 90]], sun: .66, light: ['#ffe2c0', 1.05], hemi: ['#e0a070', '#5a2a14', .55] },
+  ceres:    { sky: ['#000000', '#000000', '#05050a'], stars: 1, ground: ['#6a6762', '#45433f'], amp: 2, freq: .022, craters: 55, rocks: 25, salt: true, sun: .36, light: ['#fffaf0', 1.15], hemi: ['#445', '#111', .3] },
+  jupiter:  { deck: 'gas', sky: ['#0d1a33', '#7a8fb0', '#e8d6b0'], fog: ['#d8c8a8', 400, 5000], clouds: ['#efe2c8', '#c99a6a', '#f4ead6', '#a96f45', '#e2c9a0'], spot: [.55, .55, .12, '#c4532f'], sun: .19, light: ['#fff1d8', 1.1], hemi: ['#e8dcc0', '#8a6a40', .7], lightning: true },
+  io:       { sky: ['#000000', '#000000', '#05050a'], stars: 1, ground: ['#d9c24a', '#c46a22'], amp: 1.8, freq: .025, craters: 0, rocks: 20, io: true, volcano: [[-38, -46, 22, 9], [52, -70, 26, 11], [70, 40, 18, 7]], sun: .19, light: ['#fff4dc', 1.15], hemi: ['#665533', '#221100', .4], jupiterInSky: 140 },
+  europa:   { sky: ['#000000', '#000000', '#05050a'], stars: 1, ground: ['#e9e1d0', '#c9b8a0'], amp: 1.3, freq: .03, craters: 3, rocks: 0, iceBlocks: 30, lineae: true, sun: .19, light: ['#ffffff', 1.1], hemi: ['#8898aa', '#443322', .45], jupiterInSky: 90 },
+  saturn:   { deck: 'gas', sky: ['#1a1a2a', '#a89a70', '#f0dca8'], fog: ['#e8d29a', 400, 5000], clouds: ['#f3dfa9', '#d8b06a', '#efd9a2', '#c39a58'], sun: .1, light: ['#fff1d0', 1.05], hemi: ['#f0dca8', '#8a6a30', .7], rings: 'overhead' },
+  enceladus:{ sky: ['#000000', '#000000', '#05050a'], stars: 1, ground: ['#f4f7fb', '#d6e2ee'], amp: 1.5, freq: .028, craters: 12, rocks: 0, iceBlocks: 18, stripes: true, plumes: true, snow: true, sun: .1, light: ['#ffffff', 1.0], hemi: ['#a0b4d0', '#556677', .55], saturnInSky: 170 },
+  titan:    { sky: ['#4a2a08', '#b8721e', '#d89a48'], fog: ['#c8862e', 4, 130], ground: ['#6a4a26', '#3e2a16'], amp: 2, freq: .02, craters: 0, rocks: 30, lake: true, dunes: true, rain: true, sun: 0, light: ['#ffcf88', .6], hemi: ['#e0a050', '#3a2410', .85] },
+  uranus:   { deck: 'gas', sky: ['#0a2a33', '#5ac0c8', '#bdf0f0'], fog: ['#b0e8ea', 400, 5000], clouds: ['#c4f0f0', '#9fe0e4', '#b6ecec', '#8fd4da'], sun: .05, light: ['#e8ffff', .95], hemi: ['#c4f0f0', '#3a8a90', .7], rings: 'faint' },
+  vesta:    { sky: ['#000000', '#000000', '#05050a'], stars: 1, ground: ['#8f8574', '#565046'], amp: 2.4, freq: .022, craters: 55, rocks: 45, volcano: [[-520, -640, 700, 140]], sun: .42, light: ['#fffaf0', 1.25], hemi: ['#445', '#111', .3] },
+  ganymede: { sky: ['#000000', '#000000', '#05050a'], stars: 1, ground: ['#b8ae9e', '#6a6155'], amp: 1.6, freq: .025, craters: 30, rocks: 10, iceBlocks: 8, grooves: true, aurora: true, sun: .19, light: ['#ffffff', 1.1], hemi: ['#7788aa', '#332a22', .45], jupiterInSky: 60 },
+  callisto: { sky: ['#000000', '#000000', '#05050a'], stars: 1, ground: ['#5e554b', '#2f2924'], amp: 1.8, freq: .025, craters: 130, rocks: 20, brightRims: true, sun: .19, light: ['#ffffff', 1.25], hemi: ['#556', '#111', .35], jupiterInSky: 30 },
+  triton:   { sky: ['#000000', '#000000', '#05050a'], stars: 1, ground: ['#ecdcd2', '#b9998b'], amp: 1.4, freq: .025, craters: 6, rocks: 0, iceBlocks: 10, tritonStreaks: true, sun: .03, light: ['#eef2ff', 1.0], hemi: ['#8899cc', '#443344', .5], neptuneInSky: 75,
+              jets: [{ x: -55, z: -80, color: 0x3a302c }, { x: 30, z: -95, color: 0x3a302c }, { x: 75, z: -40, color: 0x3a302c }] },
+  pluto:    { sky: ['#000000', '#03040a', '#0e1a3a'], stars: 1, ground: ['#f2e8dc', '#c8a07c'], amp: 1.2, freq: .025, craters: 0, rocks: 0, iceBlocks: 14, nitrogenPlain: true, iceMountains: true, sun: .026, light: ['#e8ecff', .95], hemi: ['#8090c0', '#553a2a', .5], charonInSky: 36 },
+  comet:    { sky: ['#05060a', '#14161c', '#2c2e36'], stars: 1, fog: ['#30323a', 40, 700], ground: ['#2c2826', '#121010'], amp: 3.2, freq: .035, craters: 10, rocks: 90, sun: .77, light: ['#fff6e8', 1.6], hemi: ['#777a88', '#111', .45],
+              jets: [{ x: -40, z: -45, color: 0xdde8f0 }, { x: 20, z: -60, color: 0xdde8f0 }, { x: 55, z: 10, color: 0xdde8f0 }, { x: -60, z: 30, color: 0xdde8f0 }] },
+  neptune:  { deck: 'gas', sky: ['#050d33', '#2a4ab0', '#6a8ae0'], fog: ['#5a7ad0', 400, 5000], clouds: ['#3d63d8', '#2a4ab0', '#4a74e8', '#1f3a96'], streaks: 1, windy: true, sun: .03, light: ['#e0e8ff', .9], hemi: ['#7a9aee', '#10205a', .75] },
+};
+
+function clearScene() {
+  if (!scene) return;
+  scene.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) [].concat(o.material).forEach(m => { if (m.map) m.map.dispose(); m.dispose(); }); });
+  if (scene.environment) scene.environment.dispose();
+}
+function buildWorld(w) {
+  initGL(); clearScene();
+  const E = ENV[w.id], R = rng(seedOf(w.id));
+  scene = new THREE.Scene(); worldObjs = { stations: [], anim: [] };
+  const skyR = 5000;
+  // sky dome, drawn first and behind everything
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(skyR, 32, 16), new THREE.MeshBasicMaterial({ map: skyTex(...E.sky), side: THREE.BackSide, fog: false, depthWrite: false }));
+  sky.renderOrder = -10; scene.add(sky);
+  // the sky also lights the scene: ground and instruments pick up a little of its color, and metal reflects it
+  { const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromEquirectangular(sky.material.map).texture; pm.dispose(); }
+  if (E.fog) scene.fog = new THREE.Fog(E.fog[0], E.fog[1], E.fog[2]);
+  scene.background = C(E.sky[2]);
+  if (E.stars) {
+    const g = new THREE.BufferGeometry(), p = [];
+    for (let i = 0; i < 2500; i++) { const u = R() * 2 - 1, a = R() * 6.283, s = Math.sqrt(1 - u * u); p.push(Math.cos(a) * s * 4500, Math.abs(u) * 4500 + 60, Math.sin(a) * s * 4500); }
+    g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+    // stars come in three brightnesses and a range of colors (hot blue-white to cool orange), plus a faint
+    // band of the Milky Way. They use their own random numbers so every stop keeps its layout.
+    const SR = rng(seedOf(w.id) + 977), TINTS = ['#c8d8ff', '#e6eeff', '#ffffff', '#ffffff', '#fff2d8', '#ffd9a8', '#ffc08a'];
+    const layers = [{ size: 1.3, k: .9 }, { size: 1.9, k: 1 }, { size: 3, k: 1, round: true }].map(L => Object.assign(L, { p: [], c: [] }));
+    const pa = g.attributes.position.array, tc = new THREE.Color();
+    for (let i = 0; i < pa.length; i += 3) {
+      const r = SR(), L = layers[r < .7 ? 0 : r < .96 ? 1 : 2];
+      tc.set(TINTS[Math.floor(SR() * TINTS.length)]).multiplyScalar(L.k * (.7 + SR() * .3));
+      L.p.push(pa[i], pa[i + 1], pa[i + 2]); L.c.push(tc.r, tc.g, tc.b);
+    }
+    const band = layers[0], tilt = new THREE.Euler(1.1, .4, .3), v = new THREE.Vector3();
+    for (let i = 0; i < 9000; i++) { // the Milky Way: a great circle across the sky, thickest along its middle
+      const a = SR() * 6.283, off = (SR() + SR() + SR() - 1.5) * .16;
+      v.set(Math.cos(a), off, Math.sin(a)).normalize().applyEuler(tilt); if (v.y < .02) continue;
+      v.multiplyScalar(4500); band.p.push(v.x, v.y + 60, v.z); const k = .5 + SR() * .35; band.c.push(k * .95, k * .95, k);
+    }
+    g.dispose();
+    layers.forEach(L => {
+      const lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.Float32BufferAttribute(L.p, 3)); lg.setAttribute('color', new THREE.Float32BufferAttribute(L.c, 3));
+      const st = new THREE.Points(lg, new THREE.PointsMaterial({ vertexColors: true, size: L.size, sizeAttenuation: false, fog: false, depthWrite: false, map: L.round ? dotTex() : null, transparent: !!L.round }));
+      st.renderOrder = -9; scene.add(st);
+    });
+  }
+  const sunDir = new THREE.Vector3(.45, .42, -.78).normalize();
+  const dl = new THREE.DirectionalLight(C(E.light[0]), E.light[1]); dl.position.copy(sunDir).multiplyScalar(100); scene.add(dl);
+  // sun shadows in a 48 m box that follows the player (see loop); none under the overcast skies of Venus and Titan
+  dl.castShadow = !!E.sun && gfx().shadow > 0; dl.shadow.mapSize.set(gfx().shadow || 1024, gfx().shadow || 1024); dl.shadow.bias = -.0005; dl.shadow.normalBias = .04;
+  Object.assign(dl.shadow.camera, { left: -24, right: 24, top: 24, bottom: -24, near: 40, far: 180 });
+  scene.add(dl.target); worldObjs.sun = dl; worldObjs.sunDir = sunDir;
+  scene.add(new THREE.HemisphereLight(C(E.hemi[0]), C(E.hemi[1]), E.hemi[2]));
+  if (E.sun) {
+    const size = clamp(300 * E.sun, 30, 1000);
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), fog: false, depthWrite: false, blending: THREE.AdditiveBlending, transparent: true }));
+    s.position.copy(sunDir).multiplyScalar(4000); s.scale.set(size * (E.sun < .3 ? 1.6 : 1), size * (E.sun < .3 ? 1.6 : 1), 1); s.renderOrder = -8; scene.add(s);
+  }
+  if (E.jupiterInSky) skyPlanet(bandTex(['#efe2c8', '#c99a6a', '#f4ead6', '#a96f45', '#e2c9a0'], 11, { spot: [.6, .6, .06, '#c4532f'] }), E.jupiterInSky, new THREE.Vector3(-.55, .38, -.6), .12);
+  if (E.neptuneInSky) skyPlanet(bandTex(['#3d63d8', '#2a4ab0', '#4a74e8', '#1f3a96'], 13, { streaks: 1 }), E.neptuneInSky, new THREE.Vector3(-.55, .4, -.62), .3);
+  if (E.charonInSky) skyPlanet(pixelTex(128, 64, (u, v) => { const k = 120 + tileN(u, v, 6, 8) * 90; return v < .2 ? [k * .8, k * .55, k * .45] : [k, k * .97, k * .95]; }), E.charonInSky, new THREE.Vector3(-.5, .35, -.7), .1);
+  if (E.aurora) for (let i = 0; i < 7; i++) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex('rgba(150,255,190,.7)', 'rgba(60,220,140,.35)', 'rgba(40,200,120,0)'), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false }));
+    const a = -.9 + i * .3, d = 2600; s.position.set(Math.sin(a) * d, 500 + (i % 2) * 120, -Math.cos(a) * d); s.scale.set(1500, 500, 1); s.renderOrder = -6; scene.add(s);
+    worldObjs.anim.push((t) => { s.material.opacity = .55 + Math.sin(t * .7 + i * 1.3) * .35; s.position.y = 500 + (i % 2) * 120 + Math.sin(t * .4 + i) * 60; });
+  }
+  if (E.saturnInSky) { const p = skyPlanet(bandTex(['#f3dfa9', '#d8b06a', '#efd9a2', '#c39a58'], 12), E.saturnInSky, new THREE.Vector3(-.6, .33, -.55), .4); skyRings(p, E.saturnInSky); }
+  if (E.earthInSky) skyPlanet(earthTex(), 28, new THREE.Vector3(-.5, .45, -.7), .2, true);
+  if (E.moonInSky) skyPlanet(pixelTex(128, 64, (u, v) => { const k = 160 + tileN(u, v, 8, 5) * 80; return [k, k, k]; }), 14, new THREE.Vector3(-.6, .5, -.6), 0, true);
+  if (E.clouds === 1) for (let i = 0; i < 26; i++) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex('rgba(255,255,255,.9)', 'rgba(255,255,255,.55)', 'rgba(255,255,255,0)'), fog: false, depthWrite: false, transparent: true, opacity: .8 }));
+    const a = R() * 6.283, d = 900 + R() * 1200; s.position.set(Math.cos(a) * d, 180 + R() * 260, Math.sin(a) * d); const sc = 220 + R() * 300; s.scale.set(sc * 2.2, sc * .7, 1); scene.add(s);
+  }
+  if (E.deck) buildDeck(w, E, R); else buildGround(w, E, R);
+  placeStations(w, E);
+  linearizeScene(scene);
+  // start in the middle, facing the first instrument
+  player.x = 0; player.z = 1.5; player.vy = 0; player.ground = true; player.pitch = 0;
+  const s0 = worldObjs.stations[0].pos; player.yaw = Math.atan2(-(s0.x - player.x), -(s0.z - player.z));
+  player.y = groundY(player.x, player.z) + 1.7;
+  autoWalk = null; lockHintShown();
+}
+function skyPlanet(tex, radius, dir, tilt, basic) {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(radius * 10, 48, 32), basic ? new THREE.MeshBasicMaterial({ map: tex, fog: false }) : new THREE.MeshLambertMaterial({ map: tex, fog: false, emissive: 0x111111 }));
+  m.position.copy(dir.normalize()).multiplyScalar(3800); m.rotation.z = tilt; m.renderOrder = -7; scene.add(m); return m;
+}
+function skyRings(planet, radius) {
+  const R0 = radius * 10 * 1.25, R1 = radius * 10 * 2.3;
+  const tex = canvasTex(512, 8, (g, w) => { for (let x = 0; x < w; x++) { const t = x / w, a = (t < .05 ? 0 : .35 + .5 * Math.abs(Math.sin(t * 40) * Math.sin(t * 9 + 1))) * (t > .62 && t < .67 ? .1 : 1); g.fillStyle = `rgba(230,205,160,${a})`; g.fillRect(x, 0, 1, 8); } });
+  tex.repeat.set(1, 1);
+  const geo = new THREE.RingGeometry(R0, R1, 128, 1), pos = geo.attributes.position, uv = geo.attributes.uv;
+  for (let i = 0; i < pos.count; i++) { const r = Math.hypot(pos.getX(i), pos.getY(i)); uv.setXY(i, (r - R0) / (R1 - R0), .5); }
+  const ring = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide, fog: false, depthWrite: false }));
+  ring.position.copy(planet.position); ring.rotation.x = -Math.PI / 2 + .25; ring.rotation.y = .3; ring.renderOrder = -6; scene.add(ring);
+}
+function earthTex() {
+  return pixelTex(256, 128, (u, v) => {
+    const land = tileN(u, v, 5, 21, 5), cloud = tileN(u, v, 9, 33, 4), lat = Math.abs(v - .5) * 2;
+    let c = land > .55 ? [70 + land * 60, 120 + land * 40, 60] : [30, 80, 170];
+    if (lat > .85) c = [235, 240, 250];
+    if (cloud > .58) { const k = Math.min(1, (cloud - .58) * 5); c = c.map(x => x * (1 - k) + 245 * k); }
+    return c;
+  });
+}
+
+function buildGround(w, E, R) {
+  // terrain features
+  const craters = Array.from({ length: E.craters || 0 }, () => { const a = R() * 6.283, d = 14 + Math.pow(R(), .7) * 300, r = 3 + Math.pow(R(), 2.2) * 40; return [Math.cos(a) * d, Math.sin(a) * d, r, r * (.18 + R() * .1)]; });
+  if (E.craters) craters.push([-26, 20, 9, 2], [30, -12, 6, 1.4]);
+  const vol = E.volcano || [];
+  const seed = seedOf(w.id);
+  heightAt = (x, z) => {
+    let h = (fbm(x * E.freq, z * E.freq, seed, 5) - .5) * 2 * E.amp + (fbm(x * .004, z * .004, seed + 5, 3) - .5) * E.amp * 6;
+    for (const [cx, cz, r, d] of craters) {
+      const dx = x - cx, dz = z - cz, q = (dx * dx + dz * dz) / (r * r); if (q > 4) continue;
+      const t = Math.sqrt(q); h += t < 1 ? -d * (1 - q) + d * .35 : d * .35 * Math.exp(-((t - 1) * (t - 1)) / .08);
+    }
+    for (const [cx, cz, r, H] of vol) {
+      const d = Math.hypot(x - cx, z - cz) / r; if (d > 1.2) continue;
+      h += E.io ? (d < .18 ? H * .82 : H * Math.max(0, 1 - d)) : H * Math.pow(Math.max(0, 1 - d), 1.6);
+    }
+    if (E.iceMountains && x < -30) h += smooth(-30, -70, x) * (14 + 26 * Math.pow(fbm(x * .015, z * .015, seed + 3, 3), 2)) * (fbm(x * .05, z * .05, seed + 4, 3) > .45 ? 1 : .55);
+    if (E.dunes && z > 25) h += smooth(25, 45, z) * 1.6 * Math.pow(Math.abs(Math.sin(x * .16 + z * .05 + fbm(x * .02, z * .02, 9) * 4)), 2);
+    if (E.lake) { const d = Math.hypot(x - 46, z + 30); h -= 4.5 * smooth(40, 14, d); }
+    if (E.ocean) h += 2.6 - smooth(20, 60, x) * 7;
+    const r0 = Math.hypot(x, z);
+    return h * (.3 + .7 * smooth(5, 20, r0)) + (E.ocean ? 0 : 0);
+  };
+  bound = 46;
+  const N = 220, geo = new THREE.PlaneGeometry(2, 2, N, N); geo.rotateX(-Math.PI / 2);
+  const pos = geo.attributes.position, uv = geo.attributes.uv, col = new Float32Array(pos.count * 3);
+  const c1 = C(E.ground[0]), c2 = C(E.ground[1]), tmp = new THREE.Color();
+  const remap = (u) => 900 * (.11 * u + .89 * u * Math.abs(u));
+  for (let i = 0; i < pos.count; i++) {
+    const x = remap(pos.getX(i)), z = remap(pos.getZ(i)), h = heightAt(x, z);
+    pos.setXYZ(i, x, h, z); uv.setXY(i, x / 7, z / 7);
+    const n = fbm(x * .05, z * .05, seed + 2, 4);
+    tmp.copy(c1).lerp(c2, clamp(n * 1.6 - .3, 0, 1));
+    groundColor(E, x, z, h, n, tmp, seed);
+    col[i * 3] = tmp.r; col[i * 3 + 1] = tmp.g; col[i * 3 + 2] = tmp.b;
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.computeVertexNormals();
+  const ground = new THREE.Mesh(geo, (() => { const g = grainTex(seed); return new THREE.MeshPhongMaterial({ vertexColors: true, map: g, bumpMap: g, bumpScale: GROUND_BUMP, specular: 0x000000, shininess: 4 }); })());
+  ground.receiveShadow = true; scene.add(ground); // the ground does not cast: its shadows would end in a hard line at the edge of the shadow box
+  // extras
+  if (E.ocean) { const sea = new THREE.Mesh(new THREE.PlaneGeometry(4000, 4000), new THREE.MeshPhongMaterial({ color: 0x2a6fb8, shininess: 80, specular: 0x88aacc, transparent: true, opacity: .92 })); sea.rotation.x = -Math.PI / 2; sea.position.y = -.2; scene.add(sea); worldObjs.anim.push((t) => { sea.position.y = -.2 + Math.sin(t * .8) * .06; }); }
+  if (E.lake) { const lake = new THREE.Mesh(new THREE.CircleGeometry(40, 48), new THREE.MeshPhongMaterial({ color: 0x1a1208, shininess: 120, specular: 0x886644 })); lake.rotation.x = -Math.PI / 2; lake.position.set(46, -1.1, -30); scene.add(lake); }
+  const rockGeo = new THREE.DodecahedronGeometry(1, 0), rockGrain = grainTex(seed + 1), rockMat = new THREE.MeshPhongMaterial({ color: C(E.ground[1]).multiplyScalar(.95), map: rockGrain, bumpMap: rockGrain, bumpScale: .03, specular: 0x111111, shininess: 8, flatShading: true });
+  for (let i = 0; i < (E.rocks || 0); i++) {
+    const a = R() * 6.283, d = 6 + R() * 60, x = Math.cos(a) * d, z = Math.sin(a) * d; if (stationClear(x, z, 3)) continue;
+    const m = new THREE.Mesh(rockGeo, rockMat), s = .2 + Math.pow(R(), 3) * 1.6; m.scale.set(s * (1 + R() * .6), s * (.6 + R() * .5), s * (1 + R() * .6)); m.rotation.set(R() * 3, R() * 3, R() * 3);
+    m.position.set(x, heightAt(x, z) + s * .2, z); m.castShadow = m.receiveShadow = true; scene.add(m);
+  }
+  if (E.iceBlocks) {
+    const iceGrain = grainTex(seed + 4), mat = new THREE.MeshStandardMaterial({ color: E.stripes ? 0xeef6ff : 0xf2ead8, map: iceGrain, bumpMap: iceGrain, bumpScale: .02, roughness: .35, envMapIntensity: .8 });
+    for (let i = 0; i < E.iceBlocks; i++) {
+      const a = R() * 6.283, d = 10 + R() * 70, x = Math.cos(a) * d, z = Math.sin(a) * d; if (stationClear(x, z, 4)) continue;
+      const m = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mat), s = 1 + R() * 4; m.scale.set(s * (1 + R()), s * (.4 + R() * .8), s * (1 + R())); m.rotation.set((R() - .5) * .6, R() * 3, (R() - .5) * .6);
+      m.position.set(x, heightAt(x, z) + s * .1, z); m.castShadow = m.receiveShadow = true; scene.add(m);
+    }
+  }
+  if (E.trees) {
+    const trunk = new THREE.CylinderGeometry(.15, .22, 1.6, 6), crown = new THREE.ConeGeometry(1.4, 3.6, 8), tm = new THREE.MeshLambertMaterial({ color: 0x5a3a20 }), cm = new THREE.MeshLambertMaterial({ color: 0x2f6a2a });
+    for (let i = 0; i < E.trees; i++) {
+      const a = R() * 6.283, d = 14 + R() * 70, x = Math.cos(a) * d, z = Math.sin(a) * d, h = heightAt(x, z); if (h < .6 || stationClear(x, z, 4)) continue;
+      const s = .7 + R() * .8, t = new THREE.Mesh(trunk, tm), c = new THREE.Mesh(crown, cm); t.position.set(x, h + .8 * s, z); t.scale.setScalar(s); c.position.set(x, h + 3 * s, z); c.scale.setScalar(s); t.castShadow = c.castShadow = true; scene.add(t, c);
+    }
+  }
+  if (E.io) vol.forEach(([x, z, r, H]) => {
+    const y = heightAt(x, z) + 1;
+    const lava = new THREE.Mesh(new THREE.CircleGeometry(r * .16, 24), new THREE.MeshBasicMaterial({ color: 0xff5a10 })); lava.rotation.x = -Math.PI / 2; lava.position.set(x, y - .6, z); scene.add(lava);
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex('#ffd080', '#ff6a10', 'rgba(255,60,0,0)'), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false })); glow.position.set(x, y + 2, z); glow.scale.set(r * .9, r * .9, 1); scene.add(glow);
+    const pl = new THREE.PointLight(0xff6a20, 1.2, r * 3); pl.position.set(x, y + 3, z); scene.add(pl);
+    worldObjs.anim.push((t) => { const k = .85 + Math.sin(t * 3 + x) * .15; glow.material.opacity = k; pl.intensity = 1.2 * k; });
+    particles({ n: 260, at: [x, y, z], spread: r * .06, up: [14, 26], drift: 2.2, life: 3.2, size: .9, color: 0xfff0a0, g: w.g, kind: 'plume' });
+  });
+  if (E.jets) E.jets.forEach(j => particles({ n: 260, at: [j.x, heightAt(j.x, j.z), j.z], spread: 1, up: [12, 22], drift: 3, life: 4.5, size: 1, color: j.color, g: .6, kind: 'plume' }));
+  if (E.plumes) [[-60, -110], [-20, -125], [25, -118], [62, -105]].forEach(([x, z]) => particles({ n: 300, at: [x, heightAt(x, z), z], spread: 1.2, up: [18, 30], drift: 1.4, life: 5.5, size: 1.1, color: 0xeaf4ff, g: .9, kind: 'plume' }));
+  if (E.snow) particles({ n: 500, box: 40, fall: .5, size: .12, color: 0xffffff, kind: 'fall' });
+  if (E.rain) particles({ n: 700, box: 35, fall: 1.6, size: .1, color: 0xe8b070, kind: 'fall' });
+  if (E.volcano && !E.io) { /* distant shield volcanoes are part of the terrain itself */ }
+}
+function groundColor(E, x, z, h, n, c, seed) {
+  if (E.salt) { const s = fbm(x * .03, z * .03, seed + 8, 3); if (s > .64) c.lerp(C('#f2f0e8'), smooth(.64, .7, s)); }
+  if (E.io) {
+    const a = fbm(x * .03, z * .03, seed + 6, 4), b = fbm(x * .07, z * .07, seed + 7, 3);
+    if (a > .58) c.lerp(C('#f3efd0'), smooth(.58, .64, a)); else if (a < .38) c.lerp(C('#a8461a'), smooth(.38, .3, a));
+    if (b > .7) c.lerp(C('#1a1410'), smooth(.7, .74, b));
+    for (const [vx, vz, r] of E.volcano) { const d = Math.hypot(x - vx, z - vz) / r; if (d < .5) c.lerp(C('#2a1a12'), smooth(.5, .2, d)); }
+  }
+  if (E.lineae) {
+    [[.07, .02, 0], [-.03, .06, 2], [.05, -.05, 4], [.012, .045, 7]].forEach(([a, b, o]) => {
+      const v = Math.abs(Math.sin(x * a + z * b + o + fbm(x * .01, z * .01, seed + o) * 6)); if (v < .045) c.lerp(C('#8a4a2a'), smooth(.045, .01, v) * .85);
+    });
+  }
+  if (E.grooves) {
+    if (fbm(x * .006, z * .006, seed + 11, 3) < .47) c.lerp(C('#4a4238'), .75);
+    else { const v = Math.abs(Math.sin(x * .35 + z * .12 + fbm(x * .02, z * .02, seed + 12) * 5)); if (v < .25) c.lerp(C('#efe8dc'), .5); }
+  }
+  if (E.brightRims && h > .9) c.lerp(C('#d8d0c4'), smooth(.9, 2.2, h) * .8);
+  if (E.tritonStreaks) { const v = fbm(x * .01 + z * .03, z * .006, seed + 13, 3); if (v > .6) c.lerp(C('#4a3a36'), smooth(.6, .66, v) * .7); if (fbm(x * .04, z * .04, seed + 14, 3) > .62) c.lerp(C('#c9b0ff').lerp(C('#f0e8ff'), .7), .5); }
+  if (E.nitrogenPlain && x > -20) { const n2 = fbm(x * .05, z * .05, seed + 15, 2); const cell = Math.abs((n2 * 9) % 1 - .5); c.lerp(C('#f8f2ea'), .75); if (cell < .05) c.lerp(C('#9a8a7a'), .5); }
+  if (E.iceMountains && x < -40) c.lerp(C('#d9cbbd'), .4);
+  if (E.nitrogenPlain && x < -60 && fbm(x * .01, z * .01, seed + 16, 3) > .55) c.lerp(C('#7a3a22'), .55);
+  if (E.stripes && z < -60) { const v = Math.abs(((x * .9 + z * .25 + fbm(x * .02, z * .02, seed) * 30) % 32 + 32) % 32 - 16); if (v < 2.4) c.lerp(C('#6f9cc8'), smooth(2.4, .5, v) * .8); }
+  if (E.ocean) { if (h < .5) c.lerp(C('#c8b88a'), smooth(.5, .1, h)); }
+  if (E.lake) { const d = Math.hypot(x - 46, z + 30); if (d < 48) c.lerp(C('#2a1a0e'), smooth(48, 38, d) * .7); }
+  if (E.dunes && z > 25) c.lerp(C('#2a1c10'), smooth(25, 40, z) * .6);
+}
+const STATION_ANGLES = [-.35, 1.25, 2.85, 4.45];
+const stationPos = (i, rad) => new THREE.Vector3(Math.sin(STATION_ANGLES[i]) * rad * -1, 0, -Math.cos(STATION_ANGLES[i]) * rad);
+const stationClear = (x, z, m) => worldObjs.stationXZ && worldObjs.stationXZ.some(([sx, sz]) => Math.hypot(x - sx, z - sz) < m) || Math.hypot(x, z) < 4;
+function groundY(x, z) { return here && ENV[here.id].deck ? .3 : heightAt(x, z); }
+
+function buildDeck(w, E, R) {
+  bound = 9.3; heightAt = () => .3;
+  const metal = new THREE.MeshStandardMaterial({ color: 0x9aa3b8, metalness: .7, roughness: .35 });
+  // a glass floor with a metal grid, so the clouds (or the Sun) show right under your feet
+  const grid = canvasTex(256, 256, (g) => { g.fillStyle = 'rgba(150,190,230,.22)'; g.fillRect(0, 0, 256, 256); g.strokeStyle = 'rgba(200,210,225,.95)'; g.lineWidth = 5; for (let i = 0; i <= 256; i += 64) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, 256); g.stroke(); g.beginPath(); g.moveTo(0, i); g.lineTo(256, i); g.stroke(); } }, 5);
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(10.2, 64), new THREE.MeshPhongMaterial({ map: grid, transparent: true, shininess: 90, specular: 0xffffff, side: THREE.DoubleSide, depthWrite: false }));
+  floor.rotation.x = -Math.PI / 2; floor.position.y = .3; floor.receiveShadow = true; scene.add(floor);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(10.2, .25, 10, 96), metal); rim.rotation.x = Math.PI / 2; rim.position.y = .2; scene.add(rim);
+  const rail = new THREE.Mesh(new THREE.TorusGeometry(10.1, .07, 8, 96), metal); rail.rotation.x = Math.PI / 2; rail.position.y = 1.4; scene.add(rail);
+  const rail2 = rail.clone(); rail2.position.y = .8; scene.add(rail2);
+  for (let i = 0; i < 20; i++) { const a = i / 20 * 6.283, p = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, 1.2, 6), metal); p.position.set(Math.cos(a) * 10.1, .9, Math.sin(a) * 10.1); scene.add(p); }
+  for (let i = 0; i < 4; i++) { const a = i / 4 * 6.283 + .4, beam = new THREE.Mesh(new THREE.BoxGeometry(20.4, .12, .3), metal); beam.position.y = .18; beam.rotation.y = a; scene.add(beam); }
+  let lower, upper;
+  if (E.deck === 'sun') {
+    const plasma = pixelTex(256, 256, (u, v) => { const n = tileN(u, v, 12, 3, 4), cell = Math.abs(tileN(u, v, 24, 9, 2) - .5) * 2; const k = .7 + n * .5 - cell * .25; return [255, clamp(100 + k * 110, 0, 255), clamp(k * 40, 0, 255)]; }, 40);
+    lower = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000), new THREE.MeshBasicMaterial({ map: plasma, fog: true })); lower.rotation.x = -Math.PI / 2; lower.position.y = -30; scene.add(lower);
+    // looping prominences of glowing plasma
+    for (let i = 0; i < 7; i++) {
+      const a = R() * 6.283, d = 160 + R() * 380, r = 30 + R() * 70;
+      const arc = new THREE.Mesh(new THREE.TorusGeometry(r, 2 + R() * 4, 8, 48, Math.PI), new THREE.MeshBasicMaterial({ color: 0xff8a2a, transparent: true, opacity: .85 }));
+      arc.position.set(Math.cos(a) * d, -30, Math.sin(a) * d); arc.rotation.y = R() * 3; scene.add(arc);
+      worldObjs.anim.push((t) => { arc.scale.y = 1 + Math.sin(t * .4 + i) * .08; });
+    }
+    worldObjs.anim.push((t) => { plasma.offset.set(t * .004, t * .002); });
+  } else {
+    const tex = bandTex(E.clouds, seedOf(w.id), { spot: E.spot, streaks: E.streaks }); tex.repeat.set(24, 24);
+    lower = new THREE.Mesh(new THREE.PlaneGeometry(9000, 9000), new THREE.MeshLambertMaterial({ map: tex })); lower.rotation.x = -Math.PI / 2; lower.position.y = -30; scene.add(lower);
+    const tex2 = bandTex(E.clouds.slice().reverse(), seedOf(w.id) + 3, { streaks: E.streaks }); tex2.repeat.set(40, 40);
+    upper = new THREE.Mesh(new THREE.PlaneGeometry(9000, 9000), new THREE.MeshLambertMaterial({ map: tex2, transparent: true, opacity: .45, depthWrite: false })); upper.rotation.x = -Math.PI / 2; upper.position.y = -18; scene.add(upper);
+    const sp = E.windy ? 4 : 1;
+    worldObjs.anim.push((t) => { tex.offset.x = t * .0012 * sp; tex2.offset.x = t * .003 * sp; });
+    // puffy cloud towers rising from the deck below
+    for (let i = 0; i < 46; i++) {
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex('rgba(255,255,255,.85)', 'rgba(255,255,255,.45)', 'rgba(255,255,255,0)'), color: C(E.clouds[i % E.clouds.length]), transparent: true, depthWrite: false, opacity: .75 }));
+      const a = R() * 6.283, d = 120 + R() * 700, sc = 50 + R() * 150; s.position.set(Math.cos(a) * d, -28 + R() * 40, Math.sin(a) * d); s.scale.set(sc * 2.2, sc, 1); scene.add(s);
+      const v = (R() - .5) * (E.windy ? .6 : .12); worldObjs.anim.push((t, dt) => { s.position.x += v * dt * 60; if (s.position.x > 700) s.position.x = -700; if (s.position.x < -700) s.position.x = 700; });
+    }
+    if (E.rings) {
+      const faint = E.rings === 'faint';
+      const R0 = faint ? 2600 : 1800, R1 = faint ? 2900 : 3600;
+      const rt = canvasTex(1024, 8, (g, wd) => { for (let x = 0; x < wd; x++) { const t = x / wd; let a = faint ? (Math.abs(Math.sin(t * 30)) > .9 ? .35 : 0) : .3 + .55 * Math.abs(Math.sin(t * 50) * Math.sin(t * 7 + 1)); if (!faint && t > .6 && t < .65) a = .05; g.fillStyle = `rgba(${faint ? '200,240,240' : '235,210,165'},${a})`; g.fillRect(x, 0, 1, 8); } });
+      const geo = new THREE.RingGeometry(R0, R1, 256, 1), p = geo.attributes.position, uv = geo.attributes.uv;
+      for (let i = 0; i < p.count; i++) { const r = Math.hypot(p.getX(i), p.getY(i)); uv.setXY(i, (r - R0) / (R1 - R0), .5); }
+      const ring = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: rt, transparent: true, side: THREE.DoubleSide, fog: false, depthWrite: false }));
+      ring.position.set(0, -1200, 0); ring.rotation.x = faint ? .2 : -Math.PI / 2 + .62; ring.renderOrder = -5; scene.add(ring);
+    }
+    if (E.lightning) {
+      const flash = new THREE.PointLight(0xcfe0ff, 0, 400); flash.position.set(0, -35, 0); scene.add(flash);
+      let next = 2;
+      worldObjs.anim.push((t) => { if (t > next) { flash.position.set((Math.random() - .5) * 300, -38, (Math.random() - .5) * 300); flash.intensity = 6; next = t + 2 + Math.random() * 6; } flash.intensity *= .82; });
+    }
+  }
+}
+let _dot = null;
+let _blob; const blobTex = () => _blob || (_blob = canvasTex(128, 128, (g) => { const r = g.createRadialGradient(64, 64, 6, 64, 64, 64); r.addColorStop(0, 'rgba(0,0,0,1)'); r.addColorStop(.5, 'rgba(0,0,0,.6)'); r.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = r; g.fillRect(0, 0, 128, 128); }));
+const dotTex = () => _dot || (_dot = canvasTex(64, 64, (g) => { const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(.5, 'rgba(255,255,255,.8)'); r.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); }));
+function particles({ n, at, spread = 1, up = [10, 20], drift = 1, life = 3, size = .5, color, g = 1, kind, box = 30, fall = 1 }) {
+  const geo = new THREE.BufferGeometry(), p = new Float32Array(n * 3), v = new Float32Array(n * 3), age = new Float32Array(n);
+  const reset = (i, first) => {
+    if (kind === 'plume') { p[i * 3] = at[0] + (Math.random() - .5) * spread; p[i * 3 + 1] = at[1]; p[i * 3 + 2] = at[2] + (Math.random() - .5) * spread; v[i * 3] = (Math.random() - .5) * drift; v[i * 3 + 1] = up[0] + Math.random() * (up[1] - up[0]); v[i * 3 + 2] = (Math.random() - .5) * drift; age[i] = first ? Math.random() * life : 0; }
+    else { p[i * 3] = player.x + (Math.random() - .5) * box * 2; p[i * 3 + 1] = player.y + (first ? Math.random() * 30 - 5 : 25); p[i * 3 + 2] = player.z + (Math.random() - .5) * box * 2; }
+  };
+  for (let i = 0; i < n; i++) { reset(i, true); if (kind === 'plume') for (let k = 0; k < age[i] * 30; k++) { p[i * 3] += v[i * 3] / 30; p[i * 3 + 1] += v[i * 3 + 1] / 30; p[i * 3 + 2] += v[i * 3 + 2] / 30; v[i * 3 + 1] -= g * 2 / 30; } }
+  geo.setAttribute('position', new THREE.BufferAttribute(p, 3));
+  const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color, size, map: dotTex(), transparent: true, opacity: .9, depthWrite: false })); scene.add(pts);
+  worldObjs.anim.push((t, dt) => {
+    for (let i = 0; i < n; i++) {
+      if (kind === 'plume') { age[i] += dt; v[i * 3 + 1] -= g * 2 * dt; p[i * 3] += v[i * 3] * dt; p[i * 3 + 1] += v[i * 3 + 1] * dt; p[i * 3 + 2] += v[i * 3 + 2] * dt; if (age[i] > life || p[i * 3 + 1] < at[1] - 1) reset(i); }
+      else { p[i * 3 + 1] -= fall * dt * (1 + (i % 5) * .1); p[i * 3] += Math.sin(t + i) * dt * .2; if (p[i * 3 + 1] < player.y - 6) reset(i); }
+    }
+    geo.attributes.position.needsUpdate = true;
+  });
+}
+
+// --- instruments ---
+function placeStations(w, E) {
+  const rad = E.deck ? 6.3 : 9.5, mats = [];
+  worldObjs.stationXZ = [0, 1, 2, 3].map(i => { const p = stationPos(i, rad); return [p.x, p.z]; });
+  const body = new THREE.MeshStandardMaterial({ color: 0xd8dde8, metalness: .55, roughness: .35 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x3a4256, metalness: .4, roughness: .55 });
+  for (let i = 0; i < 4; i++) {
+    const p = stationPos(i, rad), y = groundY(p.x, p.z), grp = new THREE.Group(); grp.position.set(p.x, y, p.z);
+    const accent = new THREE.MeshStandardMaterial({ color: 0xff9a2e, emissive: 0x442200, roughness: .45 }); mats.push(accent);
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(.55, .7, .25, 20), dark); base.position.y = .12; grp.add(base);
+    if (i === 0) { // spectrometer: post, box and dish
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(.08, .08, 1.1, 8), body); post.position.y = .7; grp.add(post);
+      const box = new THREE.Mesh(new THREE.BoxGeometry(.6, .4, .45), body); box.position.y = 1.3; grp.add(box);
+      const dish = new THREE.Mesh(new THREE.SphereGeometry(.42, 20, 10, 0, 6.283, 0, 1.1), accent); dish.material.side = THREE.DoubleSide; dish.position.y = 1.55; dish.rotation.x = -.5; grp.add(dish);
+      worldObjs.anim.push((t) => { dish.rotation.y = t * .6; });
+    } else if (i === 1) { // drill / scoop on a tripod
+      for (let k = 0; k < 3; k++) { const a = k / 3 * 6.283, leg = new THREE.Mesh(new THREE.CylinderGeometry(.04, .05, 1.7, 6), body); leg.position.set(Math.cos(a) * .35, .85, Math.sin(a) * .35); leg.rotation.set(Math.sin(a) * .35, 0, -Math.cos(a) * .35); grp.add(leg); }
+      const drill = new THREE.Mesh(new THREE.CylinderGeometry(.12, .02, 1.3, 10), accent); drill.position.y = 1; grp.add(drill);
+      const head = new THREE.Mesh(new THREE.BoxGeometry(.35, .35, .35), body); head.position.y = 1.75; grp.add(head);
+      worldObjs.anim.push((t) => { drill.rotation.y = t * 5; });
+    } else if (i === 2) { // thermo-barometer: tall mast and gauge
+      const mast = new THREE.Mesh(new THREE.CylinderGeometry(.06, .08, 2, 8), body); mast.position.y = 1.1; grp.add(mast);
+      const gauge = new THREE.Mesh(new THREE.CylinderGeometry(.32, .32, .1, 24), accent); gauge.rotation.x = Math.PI / 2; gauge.position.y = 1.5; grp.add(gauge);
+      const face = new THREE.Mesh(new THREE.CircleGeometry(.26, 24), new THREE.MeshBasicMaterial({ color: 0xffffff })); face.position.set(0, 1.5, .06); grp.add(face);
+      const needle = new THREE.Mesh(new THREE.BoxGeometry(.03, .22, .01), new THREE.MeshBasicMaterial({ color: 0xcc2222 })); needle.position.set(0, 1.5, .07); grp.add(needle);
+      const vane = new THREE.Mesh(new THREE.BoxGeometry(.5, .2, .02), body); vane.position.y = 2.15; grp.add(vane);
+      worldObjs.anim.push((t) => { needle.rotation.z = Math.sin(t * 1.3) * .6; vane.rotation.y = Math.sin(t * .4) * 2; });
+    } else { // life scanner: glowing core and spinning rings
+      const core = new THREE.Mesh(new THREE.SphereGeometry(.28, 20, 14), new THREE.MeshBasicMaterial({ color: 0x7fe0ff })); core.position.y = 1.3; grp.add(core);
+      const r1 = new THREE.Mesh(new THREE.TorusGeometry(.5, .04, 8, 32), accent), r2 = new THREE.Mesh(new THREE.TorusGeometry(.62, .04, 8, 32), body);
+      r1.position.y = r2.position.y = 1.3; grp.add(r1, r2);
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(.1, .14, .9, 10), body); post.position.y = .6; grp.add(post);
+      worldObjs.anim.push((t) => { r1.rotation.x = t * 1.2; r2.rotation.y = t * .9; core.scale.setScalar(1 + Math.sin(t * 3) * .08); });
+    }
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.15, .06, 8, 40), new THREE.MeshBasicMaterial({ color: 0xff9a2e })); ring.rotation.x = Math.PI / 2; ring.position.y = .08; grp.add(ring);
+    const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTex(String(i + 1), '#ff9a2e'), depthTest: false, transparent: true })); label.position.y = 2.7; label.scale.set(.7, .7, 1); label.renderOrder = 5; grp.add(label);
+    grp.traverse(o => { if (o.isMesh && !o.material.isMeshBasicMaterial) o.castShadow = true; });
+    // a soft dark patch under each instrument, so it sits on the ground even where there are no sun shadows
+    const blob = new THREE.Mesh(new THREE.CircleGeometry(1.3, 24), new THREE.MeshBasicMaterial({ map: blobTex(), color: 0x000000, transparent: true, opacity: .5, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }));
+    blob.rotation.x = -Math.PI / 2; blob.position.y = .03; blob.renderOrder = 1; grp.add(blob);
+    scene.add(grp);
+    const st = { i, pos: new THREE.Vector3(p.x, y, p.z), grp, accent, ring, label };
+    worldObjs.stations.push(st);
+    worldObjs.anim.push((t) => { if (!scansOf(w.id)[i]) { ring.scale.setScalar(1 + Math.sin(t * 3) * .06); label.position.y = 2.7 + Math.sin(t * 2 + i) * .08; } });
+  }
+  refreshStations();
+}
+function refreshStations() {
+  if (!here) return;
+  const s = scansOf(here.id);
+  worldObjs.stations.forEach(st => {
+    const done = !!s[st.i], col = done ? 0x3fd28b : 0xff9a2e;
+    st.accent.color.setHex(col).convertSRGBToLinear(); st.accent.emissive.setHex(done ? 0x0a3320 : 0x442200).convertSRGBToLinear(); st.ring.material.color.setHex(col).convertSRGBToLinear();
+    st.accent.userData.lin = st.ring.material.userData.lin = true; // already converted, linearizeScene skips them
+    st.label.material.map.dispose(); st.label.material.map = labelTex(done ? '✓' : String(st.i + 1), done ? '#3fd28b' : '#ff9a2e'); st.label.material.needsUpdate = true;
+  });
+}
+function renderTools() {
+  const s = scansOf(here.id), all = s.every(Boolean), a = prog.assessed[here.id];
+  $('#toolBar').innerHTML = here.tools.map((t, i) => `<button class="tool ${s[i] ? 'done' : ''}" data-i="${i}" aria-label="${i + 1}: ${esc(t)}${s[i] ? ', done' : ''}"><span class="n">${i + 1}</span>${esc(t)}</button>`).join('') +
+    `<button class="tool assess ${a ? 'done' : ''}" id="assessBtn" ${all ? '' : 'disabled aria-disabled="true" style="opacity:.55"'} aria-label="5: Life assessment${all ? '' : ', available after all four readings'}"><span class="n">5</span>${a ? 'Assessment ✓' : 'Life assessment'}</button>`;
+  $$('#toolBar .tool[data-i]').forEach(b => b.addEventListener('click', () => walkTo(+b.dataset.i)));
+  $('#assessBtn').addEventListener('click', () => { if (s.every(Boolean)) openAssess(); });
+}
+
+/* ================= Controls ================= */
+const keys = {};
+let locked = false, dragging = false, autoWalk = null, lookHintT = 0;
+const canvas = $('#gl');
+function exitLock() { if (document.pointerLockElement) try { document.exitPointerLock(); } catch (e) {} }
+function lockHintShown() { const h = $('#lookHint'); h.style.display = ''; clearTimeout(lookHintT); lookHintT = setTimeout(() => { h.style.display = 'none'; }, 7000); }
+canvas.addEventListener('click', () => {
+  if (openModals().length) return;
+  const near = nearStation();
+  if (locked && near) { openScan(near.i); return; }
+  if (!locked) { try { const r = canvas.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (e) {} }
+});
+document.addEventListener('pointerlockchange', () => { locked = document.pointerLockElement === canvas; $('#lookHint').style.display = locked ? 'none' : ''; if (!locked) { clearTimeout(lookHintT); lookHintT = setTimeout(() => { $('#lookHint').style.display = 'none'; }, 5000); } });
+canvas.addEventListener('mousedown', (e) => { if (!locked) dragging = { x: e.clientX, y: e.clientY }; });
+addEventListener('mouseup', () => { dragging = false; });
+addEventListener('mousemove', (e) => {
+  if (screen !== 'world' || openModals().length) return;
+  const k = .0022 * settings.look;
+  if (locked) { player.yaw -= e.movementX * k; player.pitch -= e.movementY * k; }
+  else if (dragging) { player.yaw -= (e.clientX - dragging.x) * k * 1.4; player.pitch -= (e.clientY - dragging.y) * k * 1.4; dragging = { x: e.clientX, y: e.clientY }; }
+  player.pitch = clamp(player.pitch, -1.45, 1.45);
+});
+// touch: drag to look
+let touch = null;
+canvas.addEventListener('touchstart', (e) => { const t = e.touches[0]; touch = { x: t.clientX, y: t.clientY }; }, { passive: true });
+canvas.addEventListener('touchmove', (e) => { const t = e.touches[0]; if (!touch) return; player.yaw -= (t.clientX - touch.x) * .005; player.pitch = clamp(player.pitch - (t.clientY - touch.y) * .005, -1.45, 1.45); touch = { x: t.clientX, y: t.clientY }; }, { passive: true });
+
+function nearStation() {
+  if (!here) return null;
+  let best = null, bd = 3.3;
+  worldObjs.stations.forEach(st => { const d = Math.hypot(st.pos.x - player.x, st.pos.z - player.z); if (d < bd) { bd = d; best = st; } });
+  return best;
+}
+function walkTo(i) {
+  if (!here) return;
+  const st = worldObjs.stations[i];
+  if (Math.hypot(st.pos.x - player.x, st.pos.z - player.z) < 2.6) { openScan(i); return; }
+  autoWalk = i; say(`Walking to the ${here.tools[i]}.`);
+}
+function nextUnused() { const s = scansOf(here.id), i = s.findIndex(v => !v); return i; }
+let lastStep = 0;
+function loop() {
+  requestAnimationFrame(loop);
+  const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
+  if (screen !== 'world' || !scene) return;
+  const paused = openModals().length > 0;
+  if (!paused) {
+    // movement
+    const sp = (keys.shift ? 7 : 3.8) * dt;
+    let fx = 0, fz = 0;
+    if (keys.w || keys.arrowup) fz -= 1; if (keys.s || keys.arrowdown) fz += 1; if (keys.a) fx -= 1; if (keys.d) fx += 1;
+    if (keys.arrowleft) player.yaw += 1.8 * dt; if (keys.arrowright) player.yaw -= 1.8 * dt;
+    if (fx || fz) autoWalk = null;
+    if (autoWalk != null) {
+      const st = worldObjs.stations[autoWalk], dx = st.pos.x - player.x, dz = st.pos.z - player.z, d = Math.hypot(dx, dz);
+      const want = Math.atan2(-dx, -dz); let dy = want - player.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); player.yaw += dy * Math.min(1, dt * 6);
+      player.pitch += (-.18 - player.pitch) * Math.min(1, dt * 4);
+      if (d > 2.25) { const k = Math.min(sp * 1.6, d - 2.2); player.x += dx / d * k; player.z += dz / d * k; }
+      else { const i = autoWalk; autoWalk = null; openScan(i); }
+    } else if (fx || fz) {
+      const l = Math.hypot(fx, fz); fx /= l; fz /= l;
+      const sn = Math.sin(player.yaw), cs = Math.cos(player.yaw);
+      player.x += (fx * cs + fz * sn) * sp; player.z += (-fx * sn + fz * cs) * sp;
+    }
+    const r = Math.hypot(player.x, player.z); if (r > bound) { player.x *= bound / r; player.z *= bound / r; }
+    // stations are solid
+    worldObjs.stations.forEach(st => { const dx = player.x - st.pos.x, dz = player.z - st.pos.z, d = Math.hypot(dx, dz); if (d < .9 && d > 0) { player.x = st.pos.x + dx / d * .9; player.z = st.pos.z + dz / d * .9; } });
+    // gravity: real values feel absurd on tiny moons, so the game softens them (sqrt) and says so
+    const gy = groundY(player.x, player.z) + 1.7, geff = clamp(9.81 * Math.sqrt(here.g / 9.81), 1, 30);
+    if (!player.ground || player.y > gy + .01) { player.vy -= geff * dt; player.y += player.vy * dt; if (player.y <= gy) { player.y = gy; player.vy = 0; player.ground = true; } }
+    else { player.y += (gy - player.y) * Math.min(1, dt * 12); }
+    if ((fx || fz || autoWalk != null) && player.ground && t - lastStep > .45) lastStep = t;
+  }
+  camera.position.set(player.x, player.y + (player.ground && (keys.w || keys.s || keys.a || keys.d) ? Math.sin(t * 9) * .03 : 0), player.z);
+  camera.rotation.set(player.pitch, player.yaw, 0);
+  worldObjs.anim.forEach(f => f(t, dt));
+  // prompt
+  const near = !paused && autoWalk == null && nearStation(), pr = $('#prompt');
+  if (near) { pr.hidden = false; pr.innerHTML = `Press <kbd>E</kbd> or click to use the <b>${esc(here.tools[near.i])}</b>${scansOf(here.id)[near.i] ? ' (done, view again)' : ''}`; }
+  else pr.hidden = true;
+  if (worldObjs.sun && worldObjs.sun.castShadow) { // keep the shadow box centered on the player, in steps of 1 m so shadow edges don't shimmer
+    const sx = Math.round(player.x), sz = Math.round(player.z);
+    worldObjs.sun.target.position.set(sx, 0, sz); worldObjs.sun.position.copy(worldObjs.sunDir).multiplyScalar(100).add(worldObjs.sun.target.position);
+  }
+  renderer.render(scene, camera);
+}
+function jump() {
+  if (!player.ground || !here) return;
+  const geff = clamp(9.81 * Math.sqrt(here.g / 9.81), 1, 30);
+  player.vy = 4.2; player.ground = false; sfx.jump();
+  const real = .5 * 9.81 / here.g;
+  const realTxt = real >= 1000 ? `${Math.round(real / 1000)} km` : real >= 1 ? `${real.toFixed(real < 10 ? 1 : 0)} m` : `${Math.round(real * 100)} cm`;
+  toast(`A jump that clears 50 cm on Earth would clear about <b>${realTxt}</b> on ${esc(inText(here))}.${here.g < .01 ? ' Straight off into space. Good thing PEBBLES clipped on your safety rope.' : here.g < 2 ? ' (The game tones it down so you come back.)' : ''}`, 4500);
+  if (here.g < 2 && !prog.hops.includes(here.id)) { prog.hops.push(here.id); saveProg(); checkAwards(); }
+  void geff;
+}
+
+/* ================= Instrument readings ================= */
+let scanState = null;
+const shuffled = (n, seed) => { const a = [...Array(n).keys()], r = rng(seed); for (let i = n - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+function openScan(i) {
+  if (!here) return;
+  autoWalk = null; sfx.scan();
+  const sc = here.scans[i], done = scansOf(here.id)[i], order = shuffled(sc.o.length, seedOf(here.id) + i * 101);
+  scanState = { i, order, tries: 0, answered: !!done };
+  const opts = order.map((oi, k) => `<button class="opt ${done && oi === sc.a ? 'right' : ''}" data-oi="${oi}"><span class="k">${k + 1}</span><span>${esc(sc.o[oi])}</span></button>`).join('');
+  $('#scanCard').innerHTML = `<button class="close-x" data-close aria-label="Close">×</button>
+    <div class="tool-name">Instrument ${i + 1} of 4 · ${esc(here.tools[i])}</div>
+    <h2 id="scanTitle">${esc(here.name)} reading</h2>
+    <div class="reading">${sc.r}</div>
+    <div class="q">${esc(sc.q)}</div>
+    <div class="opts" role="group" aria-label="Answers">${opts}</div>
+    <p class="feedback ${done ? 'good' : ''}" aria-live="polite">${done ? '✓ ' + esc(sc.x) : 'Press a number key or click an answer.'}</p>
+    <div class="card-actions"><button class="btn ${done ? 'primary' : ''}" data-close id="scanDone">${done ? 'Continue' : 'Close for now'}</button></div>`;
+  $$('#scanCard .opt').forEach(b => b.addEventListener('click', () => answer(+b.dataset.oi)));
+  openModal('scanModal');
+  const first = $('#scanCard .opt'); setTimeout(() => (done ? $('#scanDone') : first).focus(), 40);
+  say(`${here.tools[i]} reading. ${plain(sc.r)} Question: ${sc.q} ${order.map((oi, k) => `${k + 1}: ${sc.o[oi]}.`).join(' ')}`);
+}
+function answer(oi) {
+  if (!scanState || scanState.answered) return;
+  const sc = here.scans[scanState.i], btn = $(`#scanCard .opt[data-oi="${oi}"]`), fb = $('#scanCard .feedback');
+  if (btn.classList.contains('wrong')) return;
+  if (oi === sc.a) {
+    scanState.answered = true; btn.classList.add('right'); sfx.right();
+    const pts = scanState.tries ? 5 : 10; addPoints(pts);
+    scansOf(here.id)[scanState.i] = scanState.tries ? 2 : 1; saveProg();
+    fb.className = 'feedback good'; fb.innerHTML = `✓ Correct, +${pts} points. ${esc(sc.x)} <i>Logged in your mission log.</i>`;
+    const d = $('#scanDone'); d.textContent = 'Continue'; d.classList.add('primary'); d.focus();
+    say(`Correct. ${pts} points. ${sc.x}`);
+    refreshStations(); renderTools(); checkAwards();
+  } else {
+    scanState.tries++; btn.classList.add('wrong'); btn.setAttribute('aria-disabled', 'true'); sfx.wrong();
+    fb.className = 'feedback bad'; fb.innerHTML = `Not quite. Hint: ${esc(sc.h)}`;
+    say(`Not quite. Hint: ${sc.h}`);
+  }
+}
+function afterScanClosed() {
+  if (!here) return;
+  const s = scansOf(here.id);
+  if (s.every(Boolean) && !prog.assessed[here.id]) {
+    toast(`All four readings are in! Press <kbd>5</kbd> or click <b>Life assessment</b>.`, 6000);
+    say('All four readings are in. Press 5 to open the life assessment.', true);
+  } else if (!prog.assessed[here.id]) {
+    const n = nextUnused(); if (n >= 0) toast(`Next: press <kbd>${n + 1}</kbd> for the ${esc(here.tools[n])}, or <kbd>N</kbd>.`, 3500);
+  }
+}
+
+/* ================= Life assessment ================= */
+let assess = null;
+function openAssess() {
+  if (!here || !scansOf(here.id).every(Boolean)) return;
+  const prev = prog.assessed[here.id];
+  assess = { ans: prev ? { ...prev.ans } : {}, done: !!prev };
+  renderAssess();
+  openModal('assessModal');
+  if (!prev) say(`Life assessment for ${inText(here)}. Review your readings, then judge each of the three ingredients for life as yes, maybe or no, and give the world an overall rating. Use Tab to move between choices.`);
+}
+function renderAssess() {
+  const w = here, L = w.life, a = assess.ans, done = assess.done;
+  const verdict = (k) => {
+    const ok = L[k], got = a[k], why = L.why[k];
+    if (ok.includes(got)) return `<div class="verdict good">✓ ${got === ok[0] ? 'Matches the NASA-based answer.' : `Reasonable. The NASA-based answer leans "${ok[0]}".`} ${esc(why)}</div>`;
+    return `<div class="verdict bad">✗ The evidence points to "${ok[0]}". ${esc(why)}</div>`;
+  };
+  const ing = INGREDIENTS.map(g => `<div class="ing"><h4>${g.label}</h4><div class="d">${g.d}</div>
+    <div class="seg" role="group" aria-label="${g.label}">${['yes', 'maybe', 'no'].map(v => `<button data-k="${g.k}" data-v="${v}" aria-pressed="${a[g.k] === v}" ${done ? 'disabled' : ''}>${v[0].toUpperCase() + v.slice(1)}</button>`).join('')}</div>
+    ${done ? verdict(g.k) : ''}</div>`).join('');
+  const rate = `<div class="ing"><h4>Overall potential for life</h4><div class="seg rate" role="group" aria-label="Overall rating">${RATINGS.map(r => `<button data-k="rating" data-v="${r.k}" aria-pressed="${a.rating === r.k}" ${done ? 'disabled' : ''}>${r.label}<small>${r.d}</small></button>`).join('')}</div>
+    ${done ? (() => { const good = a.rating === L.rating, ok = L.alt.includes(a.rating), lab = RATINGS.find(r => r.k === L.rating).label; return `<div class="verdict ${good ? 'good' : ok ? 'ok' : 'bad'}">${good ? '✓ Matches the NASA-based rating.' : ok ? `Close. The NASA-based rating is "${lab}".` : `✗ The NASA-based rating is "${lab}".`} ${esc(L.why.rating)}</div>`; })() : ''}</div>`;
+  const ev = `<details ${done ? '' : 'open'}><summary><b>Your readings</b></summary><ul class="evidence">${w.scans.map((s, i) => `<li><b>${esc(w.tools[i])}:</b> ${plain(s.r)}</li>`).join('')}</ul></details>`;
+  const res = prog.assessed[w.id];
+  $('#assessCard').innerHTML = `<button class="close-x" data-close aria-label="Close">×</button>
+    <div class="tool-name">Life assessment</div><h2 id="assessTitle">Could anything live on ${esc(inText(w))}?</h2>
+    <p style="margin:.2em 0;color:var(--muted)">NASA looks for three ingredients for life. Judge each one from your readings.</p>
+    ${ev}${ing}${rate}
+    ${done ? `<p><b>${res.pts} of 30 points</b> for this assessment.${res.perfect ? ' 🎯 Perfect read!' : ''} Sources: ${w.src.map(([t, u]) => `<a href="${u}" target="_blank" rel="noopener">${esc(t)}</a>`).join(', ')}</p>` : ''}
+    <div class="card-actions">${done ? `<button class="btn" id="toMap">Back to the map</button><button class="btn primary" data-close>Close</button>` : `<button class="btn primary" id="submitAssess" ${['water', 'chem', 'energy', 'rating'].every(k => a[k]) ? '' : 'disabled'}>Submit assessment</button>`}</div>`;
+  $$('#assessCard .seg button').forEach(b => b.addEventListener('click', () => {
+    assess.ans[b.dataset.k] = b.dataset.v; sfx.click();
+    $$(`#assessCard .seg button[data-k="${b.dataset.k}"]`).forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    $('#submitAssess').disabled = !['water', 'chem', 'energy', 'rating'].every(k => assess.ans[k]);
+  }));
+  const sb = $('#submitAssess'); if (sb) sb.addEventListener('click', submitAssess);
+  const tm = $('#toMap'); if (tm) tm.addEventListener('click', () => { closeModal('assessModal'); goMap(); });
+}
+function submitAssess() {
+  const L = here.life, a = assess.ans;
+  let pts = 0; ['water', 'chem', 'energy'].forEach(k => { if (L[k].includes(a[k])) pts += 5; });
+  const rGood = a.rating === L.rating, rOk = L.alt.includes(a.rating);
+  pts += rGood ? 15 : rOk ? 10 : 0;
+  const perfect = ['water', 'chem', 'energy'].every(k => L[k].includes(a[k])) && rGood;
+  prog.assessed[here.id] = { ans: { ...a }, pts, perfect }; addPoints(pts); saveProg();
+  assess.done = true; renderAssess(); renderTools();
+  (perfect ? sfx.right : rGood || rOk ? sfx.right : sfx.wrong)();
+  const lab = RATINGS.find(r => r.k === L.rating).label;
+  say(`Assessment filed. ${pts} of 30 points. ${rGood ? 'Your rating matches.' : `The NASA-based rating is ${lab}.`} ${L.why.rating} ${allAssessed() ? '' : 'Press M for the map when you are ready for the next stop.'}`);
+  setTimeout(() => $('#toMap') && $('#toMap').focus(), 50);
+  checkAwards();
+  if (allAssessed()) setTimeout(() => { closeModal('assessModal'); openReport(); }, 4500);
+}
+const allAssessed = () => WORLDS.every(w => prog.assessed[w.id]);
+
+/* ================= Log, awards, report, sources ================= */
+function openLog() {
+  const visited = WORLDS.filter(w => scanCount(w.id) || prog.visited.includes(w.id));
+  $('#logCard').innerHTML = `<button class="close-x" data-close aria-label="Close">×</button><h2 id="logTitle">Mission log</h2>
+    ${visited.length ? visited.map(w => {
+      const s = prog.scans[w.id] || [], a = prog.assessed[w.id];
+      return `<div class="log-world"><h3>${esc(w.name)} <span style="color:var(--muted);font-weight:400;font-size:.85em">${esc(w.kind)}</span></h3>
+        <ul>${w.scans.map((sc, i) => s[i] ? `<li><b>${esc(w.tools[i])}:</b> ${plain(sc.r)}</li>` : `<li style="color:var(--muted)">${esc(w.tools[i])}: not read yet</li>`).join('')}</ul>
+        ${a ? `<div>Your rating: <b>${RATINGS.find(r => r.k === a.ans.rating).label}</b> · water ${a.ans.water}, chemistry ${a.ans.chem}, energy ${a.ans.energy} · ${a.pts}/30</div>` : ''}
+        <div style="font-size:.85em">Source: ${w.src.map(([t, u]) => `<a href="${u}" target="_blank" rel="noopener">${esc(t)}</a>`).join(', ')}</div></div>`;
+    }).join('') : '<p>Nothing logged yet. Visit a stop and use an instrument.</p>'}
+    <div class="card-actions"><button class="btn primary" data-close>Close</button></div>`;
+  openModal('logModal');
+  say(`Mission log. ${visited.length} stops visited.`);
+}
+function openAwards() {
+  $('#awardsCard').innerHTML = `<button class="close-x" data-close aria-label="Close">×</button><h2 id="awTitle">Awards · ${prog.awards.length} of ${AWARDS.length}</h2>
+    <p style="color:var(--muted)">${prog.score} points so far. The most you can earn is ${WORLDS.length * 70}.</p>
+    <div class="awards-grid">${AWARDS.map(a => `<div class="aw ${prog.awards.includes(a.id) ? 'got' : ''}"><div class="i">${prog.awards.includes(a.id) ? a.icon : '🔒'}</div><b>${a.name}</b><div style="font-size:.88em;color:var(--muted)">${a.d}</div></div>`).join('')}</div>
+    <div class="card-actions"><button class="btn primary" data-close>Close</button></div>`;
+  openModal('awardsModal');
+  say(`Awards. ${prog.awards.length} of ${AWARDS.length} earned: ${AWARDS.filter(a => prog.awards.includes(a.id)).map(a => a.name).join(', ') || 'none yet'}.`);
+}
+function openReport() {
+  const rows = WORLDS.map(w => { const a = prog.assessed[w.id], nasa = RATINGS.find(r => r.k === w.life.rating).label;
+    return `<tr><td>${esc(w.name)}</td><td>${a ? RATINGS.find(r => r.k === a.ans.rating).label : '<span style="color:var(--muted)">not yet</span>'}</td><td>${a ? nasa : '<span style="color:var(--muted)">?</span>'}</td><td>${a ? (a.ans.rating === w.life.rating ? '✓' : w.life.alt.includes(a.ans.rating) ? '≈' : '✗') : ''}</td></tr>`; }).join('');
+  const done = allAssessed(), tops = WORLDS.filter(w => prog.assessed[w.id] && prog.assessed[w.id].ans.rating === 'top').map(w => w.name);
+  $('#reportCard').innerHTML = `<button class="close-x" data-close aria-label="Close">×</button><h2 id="repTitle">Mission report</h2>
+    ${done ? `<p>🏆 <b>Mission complete!</b> PEBBLES has filed your report with Mission Control, who say "wow" and "is this going on a test?" Your top targets for life: <b>${tops.length ? tops.join(', ') : 'none'}</b>.</p>` : `<p>Assess all ${WORLDS.length} stops to complete the mission. ${WORLDS.filter(w => prog.assessed[w.id]).length} done so far.</p>`}
+    <table class="report"><thead><tr><th>Stop</th><th>Your rating</th><th>NASA-based</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+    <p style="font-size:.9em;color:var(--muted)">✓ matches · ≈ close · ✗ different. Total: ${prog.score} points.</p>
+    <div class="card-actions"><button class="btn primary" data-close>Close</button></div>`;
+  openModal('reportModal');
+  say(done ? `Mission complete! Your top targets for life: ${tops.join(', ') || 'none'}. ${prog.score} points.` : `Mission report. ${WORLDS.filter(w => prog.assessed[w.id]).length} of ${WORLDS.length} stops assessed.`);
+}
+function openSources() {
+  $('#sourcesCard').innerHTML = `<button class="close-x" data-close aria-label="Close">×</button><h2 id="srcTitle">NASA sources</h2>
+    <p>Readings come from NASA's science pages, checked in October 2026. The three ingredients for life follow NASA's <a href="https://science.nasa.gov/mission/europa-clipper/why-europa-ingredients-for-life/" target="_blank" rel="noopener">Why Europa: Ingredients for Life</a>.</p>
+    <ul>${WORLDS.map(w => `<li><b>${esc(w.name)}:</b> ${w.src.map(([t, u]) => `<a href="${u}" target="_blank" rel="noopener">${esc(t)}</a>`).join(', ')}</li>`).join('')}</ul>
+    <p style="font-size:.9em;color:var(--muted)">Surface gravity values, light travel times, and a few connecting explanations (such as photosynthesis filling Earth's air with oxygen, the Moon's maria being basalt, or Vesta's eucrite meteorites being basalt) are standard textbook science rather than quotes from these pages. The game softens low gravity so jumps stay playable.</p>
+    <div class="card-actions"><button class="btn primary" data-close>Close</button></div>`;
+  openModal('sourcesModal');
+}
+
+/* ================= Wiring ================= */
+$('#startBtn').addEventListener('click', () => {
+  ctx(); goMap();
+  if (!prog.visited.length) say(`PEBBLES online. Hello, junior astrobiologist. Your mission: visit the Sun, the planets and key moons, gather the facts, and decide where life could exist. ${mapSpeech()}`);
+});
+$('#voiceTitle').addEventListener('click', () => setVoice(!settings.voice));
+$('#voiceMap').addEventListener('click', () => setVoice(!settings.voice));
+$('#voiceHud').addEventListener('click', () => setVoice(!settings.voice));
+$('#voiceTest').addEventListener('click', () => { restUntil = restLen = 0; voice.fellBack = false; setVoiceStatus(''); say('Testing. If you can hear this, voice narration is working.'); });
+$('#voicePick').addEventListener('change', (e) => { settings.name = e.target.value; restUntil = restLen = 0; voice.fellBack = false; saveSettings(); setVoiceStatus(''); if (settings.voice) say('This is the voice that will read the game to you.'); else setVoice(true); });
+$('#voiceRate').addEventListener('change', (e) => { settings.rate = +e.target.value; saveSettings(); if (settings.voice) say('This is the new reading speed.'); });
+$('#sfxBtn').addEventListener('click', () => { settings.sfx = !settings.sfx; saveSettings(); renderVoice(); sfx.click(); });
+$('#musicBtn').addEventListener('click', () => { ctx(); setMusic(!settings.music); });
+$('#lookSpeed').addEventListener('change', (e) => { settings.look = +e.target.value; saveSettings(); });
+$('#gfxMode').addEventListener('change', (e) => { settings.gfx = e.target.value; saveSettings(); applyGfx(); });
+let freshArmed = 0;
+$('#freshBtn').addEventListener('click', (e) => {
+  if (Date.now() - freshArmed < 5000) { prog = blank(); saveProg(); freshArmed = 0; e.target.textContent = 'Start fresh'; renderMap(); say('Progress erased. Every stop is fresh again. Your settings were kept.'); return; }
+  freshArmed = Date.now(); e.target.textContent = 'Click again to erase all progress'; say('Click Start fresh again to erase your points, readings and awards. Settings are kept.');
+  setTimeout(() => { if (freshArmed && Date.now() - freshArmed >= 5000) { freshArmed = 0; e.target.textContent = 'Start fresh'; } }, 5100);
+});
+$('#mapBtn').addEventListener('click', goMap);
+$('#logBtn').addEventListener('click', openLog); $('#logBtnMap').addEventListener('click', openLog);
+$('#awardsBtn').addEventListener('click', openAwards); $('#awardsBtnMap').addEventListener('click', openAwards);
+$('#reportBtnMap').addEventListener('click', openReport);
+$('#sourcesBtnMap').addEventListener('click', openSources);
+$('#helpBtn').addEventListener('click', () => openModal('helpModal')); $('#helpBtnMap').addEventListener('click', () => openModal('helpModal')); $('#helpTitle').addEventListener('click', () => openModal('helpModal'));
+$('#travel').addEventListener('click', skipWarp);
+// closing a reading nudges the student toward what comes next
+new MutationObserver(() => { if (!$('#scanModal').classList.contains('on') && scanState) { scanState = null; afterScanClosed(); } }).observe($('#scanModal'), { attributes: true, attributeFilter: ['class'] });
+
+addEventListener('keydown', (e) => {
+  const k = e.key.toLowerCase(), tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'select' || tag === 'input' || e.ctrlKey || e.metaKey || e.altKey) return;
+  const modal = openModals()[0];
+  if (k === 'escape' && modal) { e.preventDefault(); closeModal(modal.id); return; }
+  if (k === 'v') { setVoice(!settings.voice); return; }
+  if (k === 'r') { if (voice.last) say(voice.last); return; }
+  if (screen === 'travel' && (k === 'enter' || k === ' ' || k === 'escape')) { e.preventDefault(); skipWarp(); return; }
+  if (modal) {
+    if (modal.id === 'scanModal' && scanState && !scanState.answered && /^[1-9]$/.test(k)) { const oi = scanState.order[+k - 1]; if (oi != null) { e.preventDefault(); answer(oi); } }
+    return;
+  }
+  if (screen === 'map') { if (k === 'l') openLog(); if (k === 'b') openAwards(); if (k === 'h') openModal('helpModal'); return; }
+  if (screen !== 'world') return;
+  if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) { keys[k] = true; e.preventDefault(); }
+  if (e.key === 'Shift') keys.shift = true;
+  if (k === ' ') { e.preventDefault(); jump(); }
+  if (/^[1-4]$/.test(k)) walkTo(+k - 1);
+  if (k === '5') { if (scansOf(here.id).every(Boolean)) openAssess(); else say(`Take all four readings first. ${4 - scanCount(here.id)} to go.`); }
+  if (k === 'n') { const n = nextUnused(); if (n >= 0) walkTo(n); else if (!prog.assessed[here.id]) openAssess(); else say('Everything here is done. Press M for the map.'); }
+  if (k === 'e') { const n = nearStation(); if (n) openScan(n.i); }
+  if (k === 'm') goMap();
+  if (k === 'l') openLog();
+  if (k === 'b') openAwards();
+  if (k === 'h') openModal('helpModal');
+});
+addEventListener('keyup', (e) => { const k = e.key.toLowerCase(); keys[k] = false; if (e.key === 'Shift') keys.shift = false; });
+addEventListener('blur', () => { Object.keys(keys).forEach(k => keys[k] = false); });
+renderVoice(); renderScore();
+
+</script>
+</body>
+</html>

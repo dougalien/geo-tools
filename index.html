@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Geo-tools</title>
+<meta name="description" content="Free geoscience apps and games by Dougalien Systems.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Zilla+Slab:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f3ee;
+    --card: #ffffff;
+    --ink: #1f2a2e;
+    --muted: #5b6669;
+    --line: #ddd6cb;
+    --accent: #1f6fb2;
+    --accent-ink: #ffffff;
+    --chip: #ece6dc;
+    --ready: #2e7d4f;
+    --soon: #8a6d1d;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161b1d;
+      --card: #20272a;
+      --ink: #e8ecec;
+      --muted: #a3adae;
+      --line: #334044;
+      --accent: #6cb4f0;
+      --accent-ink: #0d1a24;
+      --chip: #2c3639;
+      --ready: #7fd19f;
+      --soon: #e3c46a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 17px/1.5 "Atkinson Hyperlegible", system-ui, sans-serif;
+  }
+  a { color: var(--accent); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+  header { padding: 40px 0 16px; }
+  h1 {
+    font-family: "Zilla Slab", Georgia, serif;
+    font-size: clamp(2rem, 5vw, 2.8rem);
+    margin: 0;
+    line-height: 1.1;
+  }
+  .byline { color: var(--muted); margin: 6px 0 0; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 20px 0 8px; }
+  .search {
+    flex: 1 1 240px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--ink);
+    font: inherit;
+  }
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+  .filter {
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .filter[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; padding-bottom: 48px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .card h2 { font-family: "Zilla Slab", Georgia, serif; font-size: 1.4rem; margin: 0; }
+  .kind { font-size: 14px; color: var(--muted); }
+  .summary { margin: 0; flex: 1; }
+  .topics { display: flex; flex-wrap: wrap; gap: 6px; }
+  .topic { background: var(--chip); border-radius: 6px; padding: 2px 8px; font-size: 14px; }
+  .status { font-size: 14px; font-weight: 700; }
+  .status.ready { color: var(--ready); }
+  .status.soon { color: var(--soon); }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .open {
+    background: var(--accent);
+    color: var(--accent-ink);
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+  }
+  .open[aria-disabled="true"] { opacity: .45; pointer-events: none; }
+  .copy {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .empty, .error { color: var(--muted); }
+  footer { border-top: 1px solid var(--line); padding: 20px 0 40px; color: var(--muted); font-size: 15px; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<header class="wrap">
+  <h1 id="site-title">Geo-tools</h1>
+  <p class="byline" id="site-byline">Free geoscience apps and games by Dougalien Systems</p>
+</header>
+<main class="wrap">
+  <div class="controls">
+    <label class="search-label" for="q" style="position:absolute;left:-9999px">Search tools</label>
+    <input id="q" class="search" type="search" placeholder="Search tools">
+  </div>
+  <div class="filters" id="filters" role="group" aria-label="Filter by topic"></div>
+  <div class="grid" id="grid" aria-live="polite"></div>
+</main>
+<footer class="wrap">
+  Each app lists its data sources and citations inside the app. Free to use for teaching and learning.
+</footer>
+<script>
+(async function () {
+  const grid = document.getElementById("grid");
+  const filtersEl = document.getElementById("filters");
+  const q = document.getElementById("q");
+  let data;
+  try {
+    const res = await fetch("tools.json", { cache: "no-cache" });
+    data = await res.json();
+  } catch (e) {
+    grid.innerHTML = '<p class="error">The tool list could not load. If you opened this file directly, run it from a local server instead (see README).</p>';
+    return;
+  }
+  document.getElementById("site-title").textContent = data.site.title;
+  document.getElementById("site-byline").textContent = data.site.byline;
+
+  const tools = data.tools;
+  const topics = [...new Set(tools.flatMap(t => t.topics || []))].sort();
+  let active = "All";
+
+  ["All", ...topics].forEach(name => {
+    const b = document.createElement("button");
+    b.className = "filter";
+    b.textContent = name;
+    b.setAttribute("aria-pressed", name === active);
+    b.addEventListener("click", () => {
+      active = name;
+      filtersEl.querySelectorAll(".filter").forEach(x => x.setAttribute("aria-pressed", x === b));
+      render();
+    });
+    filtersEl.appendChild(b);
+  });
+  q.addEventListener("input", render);
+
+  function href(t) {
+    return t.kind === "game" ? t.path : t.url;
+  }
+  function shortLink(t) {
+    return new URL("/" + t.slug, location.origin).href;
+  }
+
+  function render() {
+    const term = q.value.trim().toLowerCase();
+    const shown = tools.filter(t =>
+      (active === "All" || (t.topics || []).includes(active)) &&
+      (!term || (t.name + " " + t.summary + " " + (t.topics || []).join(" ")).toLowerCase().includes(term))
+    );
+    grid.innerHTML = "";
+    if (!shown.length) {
+      grid.innerHTML = '<p class="empty">No tools match.</p>';
+      return;
+    }
+    for (const t of shown) {
+      const link = href(t);
+      const card = document.createElement("article");
+      card.className = "card";
+      card.innerHTML = `
+        <div>
+          <h2></h2>
+          <div class="kind">${t.kind === "game" ? "Browser game" : "Web app"}</div>
+        </div>
+        <p class="summary"></p>
+        <div class="topics"></div>
+        <div class="status ${t.status === "ready" ? "ready" : "soon"}"></div>
+        <div class="actions">
+          <a class="open" target="_blank" rel="noopener">Open</a>
+          <button class="copy" type="button">Copy link</button>
+        </div>`;
+      card.querySelector("h2").textContent = t.name;
+      card.querySelector(".summary").textContent = t.summary;
+      card.querySelector(".status").textContent = t.status === "ready" ? "Ready" : "Coming soon";
+      const tp = card.querySelector(".topics");
+      (t.topics || []).forEach(x => {
+        const s = document.createElement("span");
+        s.className = "topic";
+        s.textContent = x;
+        tp.appendChild(s);
+      });
+      const open = card.querySelector(".open");
+      open.setAttribute("aria-label", "Open " + t.name);
+      if (link) open.href = link; else open.setAttribute("aria-disabled", "true");
+      const copy = card.querySelector(".copy");
+      copy.setAttribute("aria-label", "Copy link to " + t.name);
+      if (!link) copy.disabled = true;
+      copy.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(shortLink(t));
+          copy.textContent = "Copied";
+        } catch (e) {
+          copy.textContent = shortLink(t);
+        }
+        setTimeout(() => (copy.textContent = "Copy link"), 2000);
+      });
+      grid.appendChild(card);
+    }
+  }
+  render();
+})();
+</script>
+</body>
+</html>
