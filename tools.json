@@ -91,13 +91,13 @@
       "slug": "tracecode",
       "name": "TraceCode",
       "kind": "streamlit",
-      "url": "",
+      "url": "https://tracecode.streamlit.app/",
       "summary": "Analyze x-y lab signals from GC, XRD and SEM/EDS: baselines, smoothing, peaks and FFT.",
       "topics": [
         "Lab data",
         "Minerals"
       ],
-      "status": "not online yet"
+      "status": "ready"
     },
     {
       "slug": "spectrum-earth",
