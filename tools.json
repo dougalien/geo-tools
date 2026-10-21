@@ -10,7 +10,10 @@
       "kind": "game",
       "path": "games/lithonaut/",
       "summary": "A 3D rock cycle game. Visit field sites, take hand samples, and identify igneous, sedimentary and metamorphic rocks.",
-      "topics": ["Rocks", "Rock cycle"],
+      "topics": [
+        "Rocks",
+        "Rock cycle"
+      ],
       "status": "ready"
     },
     {
@@ -19,7 +22,9 @@
       "kind": "game",
       "path": "games/solar-system-adventure/",
       "summary": "Fly with PEBBLES, the ship computer, to 21 worlds and judge whether each one has the ingredients for life.",
-      "topics": ["Planetary geology"],
+      "topics": [
+        "Planetary geology"
+      ],
       "status": "ready"
     },
     {
@@ -28,7 +33,10 @@
       "kind": "streamlit",
       "url": "",
       "summary": "Explore how rocks change from one type to another, with a gallery of real lab samples.",
-      "topics": ["Rocks", "Rock cycle"],
+      "topics": [
+        "Rocks",
+        "Rock cycle"
+      ],
       "status": "not online yet"
     },
     {
@@ -37,7 +45,9 @@
       "kind": "streamlit",
       "url": "",
       "summary": "Explore recent earthquakes from USGS data with a guided earthquake science mentor.",
-      "topics": ["Earthquakes"],
+      "topics": [
+        "Earthquakes"
+      ],
       "status": "not online yet"
     },
     {
@@ -46,17 +56,24 @@
       "kind": "streamlit",
       "url": "",
       "summary": "Type a river, a town or a storm you remember. Find the real USGS stream gage and read its hydrograph.",
-      "topics": ["Water", "Rivers"],
+      "topics": [
+        "Water",
+        "Rivers"
+      ],
       "status": "not online yet"
     },
     {
       "slug": "resource-horizon",
       "name": "Resource Horizon",
       "kind": "streamlit",
-      "url": "",
+      "url": "https://resource-horizons.streamlit.app/",
       "summary": "Will a resource last 100 years? Compare flat, steady and compounding use, with a source for every number.",
-      "topics": ["Water", "Sustainability", "Resources"],
-      "status": "not online yet"
+      "topics": [
+        "Water",
+        "Sustainability",
+        "Resources"
+      ],
+      "status": "ready"
     },
     {
       "slug": "hydrotherm",
@@ -64,7 +81,10 @@
       "kind": "streamlit",
       "url": "",
       "summary": "Compare data center cooling water with climate-driven evapotranspiration, with every number checkable by hand.",
-      "topics": ["Water", "Sustainability"],
+      "topics": [
+        "Water",
+        "Sustainability"
+      ],
       "status": "not online yet"
     },
     {
@@ -73,7 +93,10 @@
       "kind": "streamlit",
       "url": "",
       "summary": "Analyze x-y lab signals from GC, XRD and SEM/EDS: baselines, smoothing, peaks and FFT.",
-      "topics": ["Lab data", "Minerals"],
+      "topics": [
+        "Lab data",
+        "Minerals"
+      ],
       "status": "not online yet"
     },
     {
@@ -82,7 +105,10 @@
       "kind": "streamlit",
       "url": "",
       "summary": "Signal analysis for landforms, including volcano shapes from elevation profiles.",
-      "topics": ["Volcanoes", "Landforms"],
+      "topics": [
+        "Volcanoes",
+        "Landforms"
+      ],
       "status": "not online yet"
     }
   ]
