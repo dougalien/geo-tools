@@ -79,13 +79,13 @@
       "slug": "hydrotherm",
       "name": "Hydrotherm",
       "kind": "streamlit",
-      "url": "",
+      "url": "https://hydrotherm.streamlit.app/",
       "summary": "Compare data center cooling water with climate-driven evapotranspiration, with every number checkable by hand.",
       "topics": [
         "Water",
         "Sustainability"
       ],
-      "status": "not online yet"
+      "status": "ready"
     },
     {
       "slug": "tracecode",
