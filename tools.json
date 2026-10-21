@@ -103,13 +103,13 @@
       "slug": "spectrum-earth",
       "name": "Spectrum Earth",
       "kind": "streamlit",
-      "url": "",
+      "url": "https://spectrum-earth.streamlit.app/",
       "summary": "Signal analysis for landforms, including volcano shapes from elevation profiles.",
       "topics": [
         "Volcanoes",
         "Landforms"
       ],
-      "status": "not online yet"
+      "status": "ready"
     }
   ]
 }
