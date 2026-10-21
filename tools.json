@@ -31,13 +31,13 @@
       "slug": "rock-cycle",
       "name": "The Rock Cycle",
       "kind": "streamlit",
-      "url": "",
+      "url": "https://rock-cycle.streamlit.app/",
       "summary": "Explore how rocks change from one type to another, with a gallery of real lab samples.",
       "topics": [
         "Rocks",
         "Rock cycle"
       ],
-      "status": "not online yet"
+      "status": "ready"
     },
     {
       "slug": "quake",
