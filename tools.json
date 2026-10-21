@@ -43,12 +43,12 @@
       "slug": "quake",
       "name": "Quake",
       "kind": "streamlit",
-      "url": "",
+      "url": "https://quake-usgs.streamlit.app/",
       "summary": "Explore recent earthquakes from USGS data with a guided earthquake science mentor.",
       "topics": [
         "Earthquakes"
       ],
-      "status": "not online yet"
+      "status": "ready"
     },
     {
       "slug": "river-explorer",
