@@ -54,13 +54,13 @@
       "slug": "river-explorer",
       "name": "River Explorer",
       "kind": "streamlit",
-      "url": "",
+      "url": "https://river-explorer.streamlit.app/",
       "summary": "Type a river, a town or a storm you remember. Find the real USGS stream gage and read its hydrograph.",
       "topics": [
         "Water",
         "Rivers"
       ],
-      "status": "not online yet"
+      "status": "ready"
     },
     {
       "slug": "resource-horizon",
