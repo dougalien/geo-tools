@@ -110,6 +110,18 @@
         "Landforms"
       ],
       "status": "ready"
+    },
+    {
+      "slug": "paleo-diet-cruncher",
+      "name": "Paleo Diet Cruncher",
+      "kind": "streamlit",
+      "url": "https://paleodietcruncher.streamlit.app/",
+      "summary": "Map and compare the diets of 5,831 living and extinct mammals, from mammoths to cave bears, and read carbon and nitrogen isotopes from fossil bone.",
+      "topics": [
+        "Fossils",
+        "Ancient diets"
+      ],
+      "status": "ready"
     }
   ]
 }

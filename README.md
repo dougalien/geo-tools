@@ -3,7 +3,7 @@
 One free website that launches all of Dougalien Systems' geoscience apps and games.
 
 - **Browser games** (Lithonaut, Solar System Adventure) live in `games/` and run directly on this site.
-- **Streamlit apps** (Quake, River Explorer, Resource Horizon, Hydrotherm, The Rock Cycle, TraceCode, Spectrum Earth) each run on Streamlit Community Cloud from their own GitHub repo. The launcher links out to them.
+- **Streamlit apps** (Quake, River Explorer, Resource Horizon, Hydrotherm, The Rock Cycle, TraceCode, Spectrum Earth, Paleo Diet Cruncher) each run on Streamlit Community Cloud from their own GitHub repo. The launcher links out to them.
 - Every tool gets a short link, `https://<site>/<slug>` (for example `/quake`), to paste into a Canvas page. If an app's Streamlit address ever changes, update `tools.json` and the Canvas links keep working.
 
 ## Add a new tool
