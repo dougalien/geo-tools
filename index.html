@@ -168,7 +168,7 @@
   q.addEventListener("input", render);
 
   function href(t) {
-    return t.kind === "game" ? t.path : t.url;
+    return t.path || t.url;
   }
   function shortLink(t) {
     return new URL("/" + t.slug, location.origin).href;
@@ -192,7 +192,7 @@
       card.innerHTML = `
         <div>
           <h2></h2>
-          <div class="kind">${t.kind === "game" ? "Browser game" : "Web app"}</div>
+          <div class="kind">${{ game: "Browser game", app: "Browser app" }[t.kind] || "Web app"}</div>
         </div>
         <p class="summary"></p>
         <div class="topics"></div>
