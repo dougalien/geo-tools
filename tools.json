@@ -28,6 +28,18 @@
       "status": "ready"
     },
     {
+      "slug": "structural-geology",
+      "name": "3D Structural Geology Explorer",
+      "kind": "app",
+      "path": "apps/structural-geology/",
+      "summary": "Squeeze a layer cake into thrusts and folds, stretch it with normal faults, add plutons, dikes and sills, then slide the land surface through it and click the map to see why the outcrop pattern looks the way it does.",
+      "topics": [
+        "Structural geology",
+        "Geologic maps"
+      ],
+      "status": "ready"
+    },
+    {
       "slug": "rock-cycle",
       "name": "The Rock Cycle",
       "kind": "streamlit",

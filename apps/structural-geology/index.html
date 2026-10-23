@@ -1,0 +1,1124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>3D Structural Geology Explorer</title>
+<meta name="description" content="Explore folding, thrust and normal faulting, igneous intrusions and erosion in 3D. Free for teaching and learning, by Dougalien Systems.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%20120%20120%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3CclipPath%20id%3D%22dsm%22%3E%3Cpath%20d%3D%22M22%2010%20H58%20A50%2050%200%200%201%2058%20110%20H22%20Z%22/%3E%3C/clipPath%3E%3Cg%20clip-path%3D%22url%28%23dsm%29%22%3E%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%2262%22%20height%3D%2230%22%20fill%3D%22%23D6B27C%22/%3E%3Crect%20x%3D%220%22%20y%3D%2230%22%20width%3D%2262%22%20height%3D%2222%22%20fill%3D%22%233E5C6B%22/%3E%3Crect%20x%3D%220%22%20y%3D%2252%22%20width%3D%2262%22%20height%3D%2226%22%20fill%3D%22%23B4532A%22/%3E%3Crect%20x%3D%220%22%20y%3D%2278%22%20width%3D%2262%22%20height%3D%2218%22%20fill%3D%22%23D6B27C%22/%3E%3Crect%20x%3D%220%22%20y%3D%2296%22%20width%3D%2262%22%20height%3D%2224%22%20fill%3D%22%233E5C6B%22/%3E%3Crect%20x%3D%2265%22%20y%3D%22-12%22%20width%3D%2255%22%20height%3D%2230%22%20fill%3D%22%23D6B27C%22/%3E%3Crect%20x%3D%2265%22%20y%3D%2218%22%20width%3D%2255%22%20height%3D%2222%22%20fill%3D%22%233E5C6B%22/%3E%3Crect%20x%3D%2265%22%20y%3D%2240%22%20width%3D%2255%22%20height%3D%2226%22%20fill%3D%22%23B4532A%22/%3E%3Crect%20x%3D%2265%22%20y%3D%2266%22%20width%3D%2255%22%20height%3D%2218%22%20fill%3D%22%23D6B27C%22/%3E%3Crect%20x%3D%2265%22%20y%3D%2284%22%20width%3D%2255%22%20height%3D%2224%22%20fill%3D%22%233E5C6B%22/%3E%3Crect%20x%3D%2265%22%20y%3D%22108%22%20width%3D%2255%22%20height%3D%2212%22%20fill%3D%22%23D6B27C%22/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Familjen+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; font-size: 14px; }
+[hidden] { display: none !important; }
+
+/* Layout: full-height 3D scene with a control rail on the right (stacks below the scene on phones). */
+:root {
+  --ground: #161b20;      /* scene + page background: dark slate, like a field-lamp lit outcrop */
+  --rail: #1f262d;        /* control rail */
+  --line: #33404b;        /* hairlines */
+  --ink: #e8e4da;         /* main text, warm paper white */
+  --muted: #9aa5ad;       /* secondary text */
+  --accent: #D6B27C;      /* Dougalien Systems sand: live controls */
+  --slate: #3E5C6B;       /* Dougalien Systems slate */
+  --rust: #B4532A;        /* Dougalien Systems rust */
+  --brandfont: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --extend: #6fb7c9;      /* extension controls */
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--ground); color: var(--ink); font-family: var(--display); overflow: hidden; }
+.app { display: grid; grid-template-columns: minmax(0, 1fr) 340px; height: 100%; }
+.scene { position: relative; min-width: 0; min-height: 0; }
+#view { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; }
+.hud { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); top: 14px; display: flex; flex-direction: column; gap: 4px; pointer-events: none; }
+.hud h1 { margin: 0; font-family: var(--brandfont); font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+/* Dougalien Systems: the logo's strata as a stripe across the top, and the lockup in the rail */
+.app::before { content: ""; position: fixed; left: 0; right: 0; top: 0; height: 4px; z-index: 10; pointer-events: none;
+  background: linear-gradient(90deg, #D6B27C 0 22%, #3E5C6B 22% 34%, #D6B27C 34% 62%, #B4532A 62% 70%, #D6B27C 70% 88%, #3E5C6B 88% 100%); }
+.brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-family: var(--brandfont); font-weight: 700; font-size: 17px; }
+.brand svg { width: 30px; height: 30px; flex: none; }
+.brand small { display: block; font-family: var(--display); font-weight: 400; font-size: 11px; color: var(--muted); letter-spacing: 0.02em; }
+.brand:hover { color: var(--accent); }
+.credit { font-size: 11px; color: var(--muted); line-height: 1.5; border-top: 1px solid var(--line); padding-top: 12px; }
+.credit a { color: var(--accent); }
+.hud p { margin: 0; font-size: 12px; color: var(--muted); max-width: 46ch; }
+.stage { font-family: var(--mono); font-size: 12px; color: var(--accent); }
+.viewbtns { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); top: 12px; display: flex; gap: 6px; z-index: 3; }
+.rail { background: var(--rail); border-left: 1px solid var(--line); overflow-y: auto; padding-block: 14px 24px;
+  padding-left: 16px; padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 18px; }
+section { display: flex; flex-direction: column; gap: 10px; }
+h2 { margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.ctl { display: flex; flex-direction: column; gap: 4px; }
+.ctl .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.ctl label { font-size: 13px; font-weight: 500; }
+.ctl output { font-family: var(--mono); font-size: 12px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.ctl .hint { font-size: 11px; color: var(--muted); }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+input.ext[type=range] { accent-color: var(--extend); }
+select { background: var(--ground); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 5px 6px; font: 13px var(--display); }
+button { background: transparent; color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 6px 10px; font: 500 12px var(--display); cursor: pointer; }
+button:hover { border-color: var(--rust); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.primary { border-color: var(--accent); color: var(--accent); }
+.btnrow { display: flex; flex-wrap: wrap; gap: 6px; }
+.viewbtns button { background: rgba(22,27,32,0.75); }
+.column { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.unit { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 3px 8px; font-size: 12px; color: var(--muted); }
+.unit .sw { width: 14px; height: 14px; border-radius: 2px; }
+.sw.ig { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 7px; vertical-align: -1px; }
+.ctl label.on::after { content: " ●"; color: var(--accent); font-size: 9px; }
+select.when { max-width: 190px; }
+.unit .th { font-family: var(--mono); font-size: 11px; }
+.unit.on { color: var(--ink); background: rgba(214,178,124,0.12); }
+.unit.on .nm::after { content: " ●"; color: var(--accent); font-size: 9px; }
+.symkey { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: var(--muted); }
+.symkey div { display: flex; align-items: center; gap: 8px; }
+.symkey svg { color: var(--ink); flex: none; }
+.legendkey { display: flex; gap: 14px; font-size: 11px; color: var(--muted); flex-wrap: wrap; }
+.legendkey span::before { content: ""; display: inline-block; width: 16px; height: 0; border-top: 3px solid #0b0d0f; vertical-align: middle; margin-right: 5px; }
+.legendkey span.c::before { border-top: 1px solid #0b0d0f; }
+details summary { cursor: pointer; font-size: 12px; color: var(--muted); }
+details[open] summary { margin-bottom: 10px; }
+.note { font-size: 11px; color: var(--muted); line-height: 1.45; }
+.info, .story { position: absolute; z-index: 4; background: rgba(22,27,32,0.92); border: 1px solid var(--line); border-radius: 6px; color: var(--ink); }
+.info { left: max(16px, env(safe-area-inset-left, 0px)); top: 112px; width: min(380px, calc(100% - 32px)); max-height: calc(100% - 250px); overflow-y: auto; padding: 12px 14px 12px; }
+.info h3 { margin: 0 22px 2px 0; font-family: var(--brandfont); font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.info h3 .sw { width: 14px; height: 14px; border-radius: 2px; flex: none; }
+.info .meta { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+.info h4 { margin: 10px 0 3px; font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.info p { margin: 0 0 5px; font-size: 12.5px; line-height: 1.45; }
+.story { left: 50%; transform: translateX(-50%); bottom: 16px; width: min(640px, calc(100% - 32px)); padding: 12px 36px 12px 16px; font-size: 14px; line-height: 1.45; }
+.story-step { font-family: var(--mono); font-size: 11px; color: var(--accent); margin-bottom: 3px; }
+.x { position: absolute; right: 6px; top: 4px; border: 0; padding: 2px 7px; font-size: 18px; line-height: 1; color: var(--muted); background: transparent; }
+@media (max-width: 760px) {
+  .info { top: 64px; max-height: calc(100% - 180px); }
+  body { overflow: auto; }
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: 62vh auto; height: auto; }
+  .rail { border-left: 0; border-top: 1px solid var(--line); overflow: visible; }
+  .hud p { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="scene">
+    <canvas id="view" aria-label="3D block model of folded, faulted and intruded rocks"></canvas>
+    <div class="hud">
+      <h1>3D Structural Geology Explorer</h1>
+      <div class="stage" id="stage">Undeformed layer cake</div>
+      <p>SW Montana section, 10 × 14 km (a 7.5′ quad). Drag to rotate, scroll or pinch to zoom, right-drag to pan. Click the map or block to ask what is happening at that spot.</p>
+    </div>
+    <div class="info" id="info" hidden>
+      <button type="button" class="x" id="infoX" aria-label="Close">×</button>
+      <div id="infoBody"></div>
+    </div>
+    <div class="story" id="story" hidden aria-live="polite">
+      <button type="button" class="x" id="storyX" aria-label="Close">×</button>
+      <div class="story-step" id="storyStep"></div>
+      <div id="storyText"></div>
+    </div>
+    <div class="viewbtns">
+      <button id="vmap" type="button" class="primary" aria-pressed="true">Map: on</button>
+      <button id="vtop" type="button">Look down</button>
+      <button id="v3d" type="button">Reset view</button>
+    </div>
+  </div>
+
+  <aside class="rail">
+    <a class="brand" href="https://dougalien.com" target="_blank" rel="noopener"><svg viewBox="0 0 120 120" aria-hidden="true"><clipPath id="dsm"><path d="M22 10 H58 A50 50 0 0 1 58 110 H22 Z"/></clipPath><g clip-path="url(#dsm)"><rect x="0" y="0" width="62" height="30" fill="#D6B27C"/><rect x="0" y="30" width="62" height="22" fill="#3E5C6B"/><rect x="0" y="52" width="62" height="26" fill="#B4532A"/><rect x="0" y="78" width="62" height="18" fill="#D6B27C"/><rect x="0" y="96" width="62" height="24" fill="#3E5C6B"/><rect x="65" y="-12" width="55" height="30" fill="#D6B27C"/><rect x="65" y="18" width="55" height="22" fill="#3E5C6B"/><rect x="65" y="40" width="55" height="26" fill="#B4532A"/><rect x="65" y="66" width="55" height="18" fill="#D6B27C"/><rect x="65" y="84" width="55" height="24" fill="#3E5C6B"/><rect x="65" y="108" width="55" height="12" fill="#D6B27C"/></g></svg><span>Dougalien Systems<small>Geo-tools for teaching and learning</small></span></a>
+
+    <section>
+      <h2>History</h2>
+      <div class="ctl">
+        <div class="row"><label for="short">Compression (shortening)</label><output id="shortOut">0.0 km</output></div>
+        <input id="short" type="range" min="0" max="1" step="0.001" value="0">
+        <div class="hint" id="shortHint">Thrusts form one after another, toward the foreland (east).</div>
+      </div>
+      <div class="ctl">
+        <div class="row"><label for="ext">Stretching (extension)</label><output id="extOut">0.0 km</output></div>
+        <input id="ext" class="ext" type="range" min="0" max="1" step="0.001" value="0">
+        <div class="hint">Listric normal faults cut the rocks after compression.</div>
+      </div>
+      <div class="btnrow">
+        <button id="play" class="primary" type="button">▶ Play history</button>
+        <button id="reset" type="button">Reset to layer cake</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Igneous intrusions</h2>
+      <div class="ctl">
+        <div class="row"><label for="plutonT"><span class="sw ig" style="background:#f39cc3"></span>Pluton</label>
+          <select id="plutonT" class="when"></select></div>
+        <div class="row"><label for="plutonTop">Roof elevation</label><output id="plutonTopOut"></output></div>
+        <input id="plutonTop" type="range" min="-2500" max="2500" step="50" value="1000">
+        <div class="row"><label for="plutonR">Size (radius)</label><output id="plutonROut"></output></div>
+        <input id="plutonR" type="range" min="800" max="3200" step="50" value="1900">
+      </div>
+      <div class="ctl">
+        <div class="row"><label for="sillT"><span class="sw ig" style="background:#d4336f"></span>Sill</label>
+          <select id="sillT" class="when"></select></div>
+        <div class="row"><label for="sillHost">Intrudes along</label>
+          <select id="sillHost">
+            <option value="2">Wolsey Shale</option>
+            <option value="4">Three Forks shale</option>
+            <option value="7" selected>Big Snowy–Amsden</option>
+            <option value="9">Phosphoria</option>
+            <option value="11">Ellis–Morrison</option>
+            <option value="13">Blackleaf shale</option>
+          </select></div>
+      </div>
+      <div class="ctl">
+        <div class="row"><label for="dikeT"><span class="sw ig" style="background:#8a1150"></span>Dikes</label>
+          <select id="dikeT" class="when"></select></div>
+        <div class="row"><label for="nDike">Number</label><output id="nDikeOut"></output></div>
+        <input id="nDike" type="range" min="1" max="4" step="1" value="3">
+        <div class="row"><label for="dikeTrend">Trend</label><output id="dikeTrendOut"></output></div>
+        <input id="dikeTrend" type="range" min="0" max="179" step="1" value="55">
+      </div>
+      <div class="note">When each body intrudes decides what it cuts and what cuts it: faults younger than an intrusion carry and offset it. Pluton roofs are domed, so lower the land surface to unroof one. The gray halo around a pluton is its contact aureole (hornfels).</div>
+    </section>
+
+    <section>
+      <h2>Land surface</h2>
+      <div class="ctl">
+        <div class="row"><label for="level">Surface elevation</label><output id="levelOut">700 m</output></div>
+        <input id="level" type="range" min="-2600" max="4400" step="10" value="700">
+        <div class="hint">Slide the land surface down through the rocks, or up into the stacked thrust sheets.</div>
+      </div>
+      <div class="ctl">
+        <div class="row"><label for="topo">Topography</label>
+          <select id="topo">
+            <option value="flat">Flat plane</option>
+            <option value="hills">Rolling hills</option>
+            <option value="litho" selected>Hard rocks stand high</option>
+          </select>
+        </div>
+        <div class="row"><label for="relief">Relief</label><output id="reliefOut">250 m</output></div>
+        <input id="relief" type="range" min="0" max="600" step="10" value="250">
+        <div class="hint">"Hard rocks stand high" lifts limestone and sandstone ridges and lowers shale valleys, like real erosion.</div>
+      </div>
+    </section>
+
+    <section>
+      <h2>View</h2>
+      <div class="ctl">
+        <div class="row"><label for="slice">Cut block from the south</label><output id="sliceOut">0.0 km</output></div>
+        <input id="slice" type="range" min="0" max="13000" step="50" value="0">
+      </div>
+      <div class="ctl">
+        <div class="row"><label for="ve">Vertical exaggeration</label><output id="veOut">1.0×</output></div>
+        <input id="ve" type="range" min="1" max="3" step="0.1" value="1">
+      </div>
+      <div class="symkey" aria-label="Map symbols">
+        <div><svg viewBox="0 0 40 16" width="40" height="16"><path d="M2 11H38" stroke="currentColor" stroke-width="2.6"/><path d="M8 11L16 11L12 4Z M24 11L32 11L28 4Z" fill="currentColor"/></svg>Thrust fault, teeth on upper plate</div>
+        <div><svg viewBox="0 0 40 16" width="40" height="16"><path d="M2 5H38" stroke="currentColor" stroke-width="2.6"/><path d="M20 5V11" stroke="currentColor" stroke-width="1.8"/><circle cx="20" cy="13" r="2.4" fill="currentColor"/></svg>Normal fault, ball on downthrown side</div>
+        <div><svg viewBox="0 0 40 16" width="40" height="16"><path d="M2 8H38" stroke="#d0605a" stroke-width="2"/><path d="M20 8V2M20 8V14" stroke="#d0605a" stroke-width="1.8"/><path d="M17 3L23 3L20 0Z M17 13L23 13L20 16Z" fill="#d0605a"/></svg>Anticline hinge</div>
+        <div><svg viewBox="0 0 40 16" width="40" height="16"><path d="M2 8H38" stroke="#6f8fd8" stroke-width="2"/><path d="M20 1V7M20 9V15" stroke="#6f8fd8" stroke-width="1.8"/><path d="M17 5L23 5L20 8Z M17 11L23 11L20 8Z" fill="#6f8fd8"/></svg>Syncline hinge</div>
+        <div><svg viewBox="0 0 40 16" width="40" height="16"><path d="M2 8H38" stroke="currentColor" stroke-width="1"/></svg>Contact</div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Stratigraphic column</h2>
+      <div class="column" id="column"></div>
+      <div class="note">● marks units exposed at the land surface right now.</div>
+    </section>
+
+    <details>
+      <summary>Structure settings</summary>
+      <section>
+        <div class="ctl">
+          <div class="row"><label for="nThrust">Number of thrusts</label><output id="nThrustOut">4</output></div>
+          <input id="nThrust" type="range" min="1" max="5" step="1" value="4">
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="rampDip">Thrust ramp dip</label><output id="rampDipOut">30°</output></div>
+          <input id="rampDip" type="range" min="15" max="50" step="1" value="30">
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="decol">Décollement</label>
+            <select id="decol">
+              <option value="-1100" selected>Wolsey Shale (Cambrian)</option>
+              <option value="-650">Three Forks shale (Devonian)</option>
+              <option value="-1400">In basement (thick-skinned)</option>
+            </select>
+          </div>
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="nNormal">Number of normal faults</label><output id="nNormalOut">2</output></div>
+          <input id="nNormal" class="ext" type="range" min="1" max="3" step="1" value="2">
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="normalDip">Normal fault dip (at surface)</label><output id="normalDipOut">60°</output></div>
+          <input id="normalDip" class="ext" type="range" min="40" max="75" step="1" value="60">
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="normalSense">Normal faults dip</label>
+            <select id="normalSense">
+              <option value="E">East (down to the east)</option>
+              <option value="W">West (down to the west)</option>
+              <option value="G" selected>Both (graben)</option>
+            </select>
+          </div>
+        </div>
+        <div class="note">Thrusts follow a flat on the décollement, then a ramp to the surface; the hanging wall folds as it rides over the ramp (fault-bend folding). Slip dies out along strike, so faults end within the map and folds plunge. This is a kinematic teaching model, not a mechanical simulation.</div>
+      </section>
+    </details>
+
+    <div class="credit">3D Structural Geology Explorer is free to use for teaching and learning. Made by <a href="https://dougalien.com" target="_blank" rel="noopener">Dougalien Systems</a>, part of <a href="/">Geo-tools</a>.</div>
+  </aside>
+</div>
+
+<script src="three.min.js"></script>
+<script>if (!window.THREE) document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
+<script src="OrbitControls.js"></script>
+<script>if (!window.THREE.OrbitControls) document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');</script>
+<script>
+"use strict";
+// ------------------------------------------------------------------ geology
+const UNITS = [ // oldest first; thickness in m. Index 0 is basement.
+  ["Archean gneiss", 0, "#7a6676"],
+  ["Flathead Sandstone (Cm)", 50, "#4b3f8f"],
+  ["Wolsey Shale (Cm)", 100, "#4f5fb0"],
+  ["Meagher–Park–Pilgrim (Cm)", 250, "#3f84c0"],
+  ["Jefferson–Three Forks (D)", 250, "#3aa6b8"],
+  ["Lodgepole Limestone (M)", 200, "#4fbf9f"],
+  ["Mission Canyon Limestone (M)", 250, "#7fcf8a"],
+  ["Big Snowy–Amsden (M–P)", 100, "#b5dc7a"],
+  ["Quadrant Sandstone (P)", 250, "#e3e26a"],
+  ["Phosphoria Formation (Pm)", 100, "#f2c45a"],
+  ["Dinwoody–Thaynes (Tr)", 200, "#f5a24e"],
+  ["Ellis Group–Morrison (J)", 200, "#ec7d45"],
+  ["Kootenai Formation (K)", 250, "#de5b43"],
+  ["Blackleaf–Frontier and younger (K)", 600, "#c2423f"],
+];
+// Erosional resistance: metres of relief at full "Relief" (fraction of the slider).
+const HARDNESS = { "Archean gneiss": 0.8, "Flathead Sandstone (Cm)": 0.6, "Meagher–Park–Pilgrim (Cm)": 0.35,
+  "Jefferson–Three Forks (D)": 0.45, "Lodgepole Limestone (M)": 0.6, "Mission Canyon Limestone (M)": 1.0,
+  "Quadrant Sandstone (P)": 0.9, "Kootenai Formation (K)": 0.35, "Phosphoria Formation (Pm)": 0.2 };
+const BASE = -1200;
+const CONTACTS = []; // elevation of the base of units 1..n
+{ let z = BASE; for (let i = 1; i < UNITS.length; i++) { CONTACTS.push(z); z += UNITS[i][1]; } }
+const TOP = CONTACTS[CONTACTS.length - 1] + UNITS[UNITS.length - 1][1];
+function unitOf(z0) { let k = 0; for (let i = 0; i < CONTACTS.length; i++) if (z0 >= CONTACTS[i]) k = i + 1; return k; }
+
+const EXTENT = { x0: 0, x1: 10000, y0: 0, y1: 14000, z0: -3000, z1: 4500 };
+
+// ------------------------------------------------------- ramp-flat faults
+// A fault with a flat at `dec`, a ramp rising toward the transport direction, rounded bends.
+// Hanging-wall particles travel along copies of the fault profile shifted vertically, so the
+// hanging wall folds over the ramp (fault-bend folding). Negative slip = normal (listric) fault.
+function azv(az) { const a = az * Math.PI / 180; return [Math.sin(a), Math.cos(a)]; }
+class RampFault {
+  constructor(o) {
+    Object.assign(this, o);
+    this.eu = azv(o.strike - 90); this.ea = azv(o.strike);
+    const du = 20, u0 = -60000, n = 6001;
+    this.du = du; this.u0 = u0; this.n = n;
+    const tanD = Math.tan(o.dip * Math.PI / 180);
+    let z = new Float64Array(n);
+    for (let i = 0; i < n; i++) { const u = u0 + i * du; z[i] = o.dec + Math.max(u, 0) * tanD; if (o.flat != null) z[i] = Math.min(z[i], o.flat); }
+    const k = Math.max(1, Math.round(o.bend / du));
+    if (k > 1) { // gaussian smoothing of the bends
+      const w = []; let ws = 0; for (let j = -3 * k; j <= 3 * k; j++) { const v = Math.exp(-0.5 * (j / k) ** 2); w.push(v); ws += v; }
+      const s = new Float64Array(n);
+      for (let i = 0; i < n; i++) { let acc = 0; for (let j = 0; j < w.length; j++) { const ii = Math.min(n - 1, Math.max(0, i + j - 3 * k)); acc += w[j] * z[ii]; } s[i] = acc / ws; }
+      z = s;
+    }
+    this.z = z;
+    const arc = new Float64Array(n);
+    for (let i = 1; i < n; i++) arc[i] = arc[i - 1] + Math.hypot(du, z[i] - z[i - 1]);
+    this.arc = arc;
+  }
+  fz(u) { const t = (u - this.u0) / this.du; const i = Math.max(0, Math.min(this.n - 2, Math.floor(t))); const f = t - i; return this.z[i] * (1 - f) + this.z[i + 1] * f; }
+  fa(u) { const t = (u - this.u0) / this.du; const i = Math.max(0, Math.min(this.n - 2, Math.floor(t))); const f = t - i; return this.arc[i] * (1 - f) + this.arc[i + 1] * f; }
+  ua(s) { const a = this.arc; let lo = 0, hi = this.n - 1; if (s <= a[0]) return this.u0 + (s - a[0]); if (s >= a[hi]) return this.u0 + hi * this.du + (s - a[hi]);
+    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (a[m] <= s) lo = m; else hi = m; } const f = (s - a[lo]) / (a[hi] - a[lo]); return this.u0 + (lo + f) * this.du; }
+  local(x, y) { const dx = x - this.bx, dy = y - this.by; const a = dx * this.ea[0] + dy * this.ea[1] - this.a0; const u = dx * this.eu[0] + dy * this.eu[1] - this.curve * a * a; return [u, a]; }
+  slipAt(a, s) { const r = a / this.half; return s * (this.minFrac + (1 - this.minFrac) * Math.max(0, 1 - r * r)); }
+  dist(p) { const [u] = this.local(p[0], p[1]); return p[2] - this.fz(u); }
+  restore(p, slip) { // in place
+    const [u, a] = this.local(p[0], p[1]); const fz = this.fz(u); const h = p[2] - fz; if (h <= 0) return;
+    const u2 = this.ua(this.fa(u) - this.slipAt(a, slip)); const d = u2 - u;
+    p[0] += d * this.eu[0]; p[1] += d * this.eu[1]; p[2] = this.fz(u2) + h;
+  }
+}
+
+// ----------------------------------------------------------- the scenario
+const S = { map: true, short: 0, ext: 0, level: 700, topo: "litho", relief: 250, slice: 0, ve: 1,
+  nThrust: 4, rampDip: 30, decol: -1100, nNormal: 2, normalDip: 60, normalSense: "G",
+  plutonT: 2, plutonTop: 1000, plutonR: 1900, sillT: 1, sillHost: 7, dikeT: 3, nDike: 3, dikeTrend: 55 };
+let THRUSTS = [], NORMALS = [], MAXSHORT = 1, MAXEXT = 1;
+
+function buildFaults() {
+  // Thrusts: traces spread across the quad from west to east; each forms after the previous one (in sequence).
+  const n = S.nThrust, dip = S.rampDip, dec = S.decol;
+  const run = (TOP - dec) / Math.tan(dip * Math.PI / 180);
+  const centres = [8200, 5200, 9800, 4200, 7400];
+  const halves = [16000, 9000, 12000, 8000, 10000];
+  const mins = [0.35, 0.0, 0.1, 0.0, 0.0];
+  const curves = [0.000004, -0.000012, 0.00001, 0.000015, -0.000008];
+  const strikes = [178, 184, 174, 188, 181];
+  const slips = [2600, 2000, 1800, 1500, 1300];
+  THRUSTS = [];
+  for (let i = 0; i < n; i++) {
+    const trace = 1200 + (i + 0.5) * (8000 / n);
+    THRUSTS.push(new RampFault({ strike: strikes[i], dip, dec, flat: null, bend: 300,
+      bx: trace - run, by: 7000, a0: 7000 - centres[i], half: halves[i], minFrac: mins[i], curve: curves[i], max: slips[i] }));
+  }
+  MAXSHORT = THRUSTS.reduce((s, t) => s + t.max, 0);
+  // Normal faults: listric, flattening near -6 km.
+  NORMALS = [];
+  const m = S.nNormal, ndip = S.normalDip, ndec = -6500;
+  const nrun = (TOP - ndec) / Math.tan(ndip * Math.PI / 180);
+  const xs = m === 1 ? [5600] : m === 2 ? [3600, 7400] : [2600, 5200, 7900];
+  for (let i = 0; i < m; i++) {
+    let east = S.normalSense === "E" || (S.normalSense === "G" && i % 2 === 0);
+    if (S.normalSense === "G" && m === 1) east = true;
+    const strike = east ? 352 : 172;          // dips toward strike + 90
+    const dd = azv(strike + 90);
+    NORMALS.push(new RampFault({ strike, dip: ndip, dec: ndec, flat: null, bend: 1800,
+      bx: xs[i] + dd[0] * nrun, by: 7000 + dd[1] * nrun, a0: (i - 1) * 1500, half: 14000, minFrac: 0.25, curve: 0, max: 900 }));
+  }
+  MAXEXT = NORMALS.reduce((s, t) => s + t.max, 0);
+}
+
+function slips() {
+  let left = S.short * MAXSHORT; const ts = THRUSTS.map(t => { const s = Math.max(0, Math.min(t.max, left)); left -= s; return s; });
+  const ns = NORMALS.map(t => t.max * S.ext);
+  return [ts, ns];
+}
+
+// ------------------------------------------------------------- intrusions
+// Each intrusion is defined in the coordinates of the moment it intrudes (1 before thrusting,
+// 2 between thrusting and extension, 3 after extension; 0 off). Faults younger than an intrusion
+// carry and offset it; older faults are cut by it.
+// Fields per point (IGV): 0 sill lens (>0 inside), 1 pluton (<0 inside, ~metres), 2 dike along-strike (|a|<1), 4-7 dike signed distances.
+const IGNEOUS = [["Granite pluton", "#f39cc3", "gr"], ["Sill", "#d4336f", "sl"], ["Dike", "#8a1150", "d"]];
+const IGT = { plutonT: 0, sillT: 0, dikeT: 0 }; // intrusion timing in effect (Play hides intrusions until they happen)
+let playT = null;
+const NU = UNITS.length;                     // rock index NU.. = igneous
+const PLUTON = { x: 4700, y: 7600 }, SILL = { x: 3800, y: 6200, rx: 4300, ry: 5600 }, DIKE = { x: 5000, y: 7200, w: 70, half: 15000, offs: [0, 1400, -1700, 3100], cot: 1 / Math.tan(80 * Math.PI / 180) };
+function sillZ() { const h = S.sillHost; return { z: CONTACTS[h - 1] + UNITS[h][1] / 2, t: Math.min(70, UNITS[h][1] * 0.6) }; }
+function igReset(ig) { ig[0] = -1; ig[1] = 1e5; ig[2] = 9; ig[3] = 0; ig[4] = ig[5] = ig[6] = ig[7] = 1e5; }
+function igEval(stage, p, ig) {
+  if (IGT.plutonT === stage) { // domed stock, lobate in plan, elongate N-S
+    const dx = p[0] - PLUTON.x, dy = (p[1] - PLUTON.y) / 1.35, r = Math.hypot(dx, dy), th = Math.atan2(dy, dx);
+    const R = S.plutonR * (1 + 0.10 * Math.sin(3 * th + 0.4) + 0.06 * Math.sin(5 * th + 2.1));
+    ig[1] = Math.max(r - R, 0.8 * (p[2] - (S.plutonTop - 1000 * (r / R) ** 2)));
+  }
+  if (IGT.sillT === stage) ig[0] = 1 - ((p[0] - SILL.x) / SILL.rx) ** 2 - ((p[1] - SILL.y) / SILL.ry) ** 2;
+  if (IGT.dikeT === stage) {
+    const n = azv(S.dikeTrend + 90), a = azv(S.dikeTrend), dx = p[0] - DIKE.x, dy = p[1] - DIKE.y, across = dx * n[0] + dy * n[1];
+    ig[2] = (dx * a[0] + dy * a[1]) / DIKE.half;
+    // irregular spacing and a steep (80°) dip, so offsets across faults are not hidden by the regular pattern
+    for (let i = 0; i < 4; i++) ig[4 + i] = i < S.nDike ? across - DIKE.offs[i] - p[2] * DIKE.cot : 1e5;
+  }
+}
+// Which rock is here: the stratigraphic unit, unless a younger intrusion occupies the point.
+function rockAt(z0, ig) {
+  let r = unitOf(z0), best = -1;
+  if (IGT.plutonT && ig[1] < 0) { best = IGT.plutonT * 3; r = NU; }
+  if (IGT.sillT && IGT.sillT * 3 + 1 > best && ig[0] > 0) { const s = sillZ(); if (Math.abs(z0 - s.z) < 0.5 * s.t * Math.sqrt(ig[0])) { best = IGT.sillT * 3 + 1; r = NU + 1; } }
+  if (IGT.dikeT && IGT.dikeT * 3 + 2 > best) { const w = 0.5 * DIKE.w * Math.min(1, Math.max(0, (1 - Math.abs(ig[2])) * 4));
+    if (Math.min(Math.abs(ig[4]), Math.abs(ig[5]), Math.abs(ig[6]), Math.abs(ig[7])) < w) r = NU + 2; }
+  return r;
+}
+
+// Undo all events youngest first; record each fault's distance just before undoing it,
+// and evaluate each intrusion at the moment it formed.
+const NF = 8, IGV = new Float64Array(8);
+function restorePoint(p, ts, ns, dists, ig = IGV) {
+  for (let i = 0; i < NF; i++) dists[i] = 1e6;
+  igReset(ig); igEval(3, p, ig);
+  for (let i = NORMALS.length - 1; i >= 0; i--) { if (ns[i] > 0) { dists[5 + i] = NORMALS[i].dist(p); NORMALS[i].restore(p, -ns[i]); } }
+  igEval(2, p, ig);
+  for (let i = THRUSTS.length - 1; i >= 0; i--) { if (ts[i] > 0) { dists[i] = THRUSTS[i].dist(p); THRUSTS[i].restore(p, ts[i]); } }
+  igEval(1, p, ig);
+  return p[2];
+}
+
+// -------------------------------------------------------------- topography
+function hills(x, y) {
+  return 0.45 * Math.sin(x / 1900 + 0.7) * Math.cos(y / 2600 - 0.3) + 0.3 * Math.sin((x + y) / 1300 + 1.9)
+    + 0.25 * Math.cos((x - 0.6 * y) / 900 - 0.4);
+}
+const HARD = UNITS.map(u => HARDNESS[u[0]] || 0).concat([0.85, 0.7, 0.75]);
+
+// --------------------------------------------------------------- 3D scene
+const canvas = document.getElementById("view");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x161b20);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(38, 1, 0.05, 200);
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.enableDamping = true; controls.target.set(0, 0, 0);
+function view3d() { camera.position.set(13, 11, 17); controls.target.set(0, -0.3, 0); controls.update(); }
+function viewMap() { camera.position.set(0, 26, 0.001); controls.target.set(0, 0, 0); controls.update(); }
+view3d();
+
+const vert = `
+attribute float aZ0; attribute vec4 aF0; attribute vec4 aF1; attribute float aElev; attribute vec4 aIg; attribute vec4 aDk;
+varying float vZ0; varying vec4 vF0; varying vec4 vF1; varying vec3 vN; varying float vElev; varying vec4 vIg; varying vec4 vDk;
+void main() { vZ0 = aZ0; vF0 = aF0; vF1 = aF1; vElev = aElev; vIg = aIg; vDk = aDk; vN = normalMatrix * normal;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
+const frag = `
+uniform float uContacts[${CONTACTS.length}]; uniform vec3 uColors[${UNITS.length}];
+uniform float uTop; uniform float uContour;
+uniform vec3 uIgCol[3]; uniform float uRank[3]; uniform float uSillZ; uniform float uSillT; uniform float uDikeW;
+varying float vZ0; varying vec4 vF0; varying vec4 vF1; varying vec3 vN; varying float vElev; varying vec4 vIg; varying vec4 vDk;
+float line(float d, float w) { float fw = fwidth(d) * w; return 1.0 - smoothstep(fw * 0.5, fw * 1.2, abs(d)); }
+float inside(float d) { float fw = max(fwidth(d), 1e-3) * 0.7; return 1.0 - smoothstep(-fw, fw, d); } // d < 0 inside
+void main() {
+  vec3 col = uColors[0];
+  for (int i = 0; i < ${CONTACTS.length}; i++) { if (vZ0 >= uContacts[i]) { col = uColors[i + 1]; } }
+  // contact-metamorphic aureole (hornfels) around the pluton
+  if (uRank[0] >= 0.0) { float au = 1.0 - smoothstep(0.0, 320.0, vIg.y); col = mix(col, vec3(0.42, 0.36, 0.34), au * step(0.0, vIg.y) * 0.45); }
+  float c = 0.0;
+  for (int i = 0; i < ${CONTACTS.length}; i++) { c = max(c, line(vZ0 - uContacts[i], 1.0)); }
+  col = mix(col, vec3(0.06, 0.07, 0.08), c * 0.6);
+  // intrusions, oldest first so younger ones cut older ones
+  float cP = uRank[0] >= 0.0 ? inside(vIg.y) : 0.0;
+  float sh = 0.5 * uSillT * sqrt(clamp(vIg.x, 0.0, 1.0));
+  float cS = uRank[1] >= 0.0 && vIg.x > 0.0 ? inside(abs(vZ0 - uSillZ) - sh) : 0.0;
+  float dw = 0.5 * uDikeW * clamp((1.0 - abs(vIg.z)) * 4.0, 0.0, 1.0);
+  float dm = min(min(abs(vDk.x), abs(vDk.y)), min(abs(vDk.z), abs(vDk.w)));
+  float cD = uRank[2] >= 0.0 ? inside(dm - dw) : 0.0;
+  for (int r = 0; r < 3; r++) { float fr = float(r);
+    if (uRank[0] == fr) { col = mix(col, uIgCol[0], cP); col = mix(col, vec3(0.25, 0.05, 0.12), line(vIg.y, 1.0) * 0.7); }
+    if (uRank[1] == fr) col = mix(col, uIgCol[1], cS);
+    if (uRank[2] == fr) col = mix(col, uIgCol[2], cD); }
+  float f = 0.0;
+  for (int i = 0; i < 4; i++) { f = max(f, line(vF0[i], 2.2)); f = max(f, line(vF1[i], 2.2)); }
+  vec3 n = normalize(vN); vec3 L = normalize(vec3(0.35, 0.8, 0.5));
+  float shade = 0.78 + 0.32 * max(dot(n, L), 0.0);
+  col *= shade;
+  if (uTop > 0.5 && uContour > 0.5) { float t = line(mod(vElev + 25.0, 50.0) - 25.0, 0.8); col = mix(col, col * 0.7, t * 0.55); }
+  col = mix(col, vec3(0.02, 0.02, 0.03), f);
+  gl_FragColor = vec4(col, 1.0);
+}`;
+const IG_UNIFORMS = { uIgCol: { value: IGNEOUS.map(u => new THREE.Color(u[1])) }, uRank: { value: [-1, -1, -1] }, uSillZ: { value: 0 }, uSillT: { value: 0 }, uDikeW: { value: DIKE.w } };
+function makeMaterial(top) {
+  return new THREE.ShaderMaterial({ vertexShader: vert, fragmentShader: frag, extensions: { derivatives: true }, side: THREE.DoubleSide,
+    uniforms: Object.assign({ uContacts: { value: CONTACTS }, uColors: { value: UNITS.map(u => new THREE.Color(u[2])) }, uTop: { value: top ? 1 : 0 }, uContour: { value: 1 } }, IG_UNIFORMS) });
+}
+function igUniforms() { // draw order of the three intrusions: by time, then pluton < sill < dike
+  const pr = [IGT.plutonT * 3, IGT.sillT * 3 + 1, IGT.dikeT * 3 + 2].map((p, i) => [[IGT.plutonT, IGT.sillT, IGT.dikeT][i] ? p : -1, i]);
+  const on = pr.filter(q => q[0] >= 0).sort((a, b) => a[0] - b[0]); const rank = [-1, -1, -1]; on.forEach((q, r) => rank[q[1]] = r);
+  IG_UNIFORMS.uRank.value = rank; const s = sillZ(); IG_UNIFORMS.uSillZ.value = s.z; IG_UNIFORMS.uSillT.value = s.t;
+}
+
+// Block faces are grids sampled at the present day. A triangle that straddles a fault would blend
+// rock from both sides (zigzag bands), so such triangles are cut along the fault: each cut edge gets
+// two vertices a few cm apart, one restored from each side.
+const NX = 150, NY = 210, NZ = 70;
+const ATTR = [["position", 3], ["normal", 3], ["aZ0", 1], ["aElev", 1], ["aF0", 4], ["aF1", 4], ["aIg", 4], ["aDk", 4]];
+function allocVerts(g, cap) {
+  const W = new Float64Array(cap * 3); if (g.W) W.set(g.W.subarray(0, Math.min(g.W.length, W.length))); g.W = W;
+  for (const [n, s] of ATTR) { const a = new Float32Array(cap * s), old = g.attributes[n]; if (old) a.set(old.array.subarray(0, Math.min(old.array.length, a.length)));
+    g.setAttribute(n, new THREE.BufferAttribute(a, s)); }
+  g.cap = cap;
+}
+function makeGrid(nu, nv) {
+  const g = new THREE.BufferGeometry(); g.nu = nu; g.nv = nv; g.nb = nu * nv;
+  allocVerts(g, Math.ceil(g.nb * 1.25) + 256);
+  g.idx = new Uint32Array(Math.ceil((nu - 1) * (nv - 1) * 6 * 1.25) + 1024); g.setIndex(new THREE.BufferAttribute(g.idx, 1));
+  return g;
+}
+let TS = [], NS = [];
+function vtx(g, k, x, y, z, nx, ny, nz) { // fill vertex k from a present-day point (m) and a scene-space normal
+  if (k >= g.cap) allocVerts(g, Math.ceil(g.cap * 1.5));
+  const A = g.attributes, pos = A.position.array, nrm = A.normal.array, f0 = A.aF0.array, f1 = A.aF1.array, ig = A.aIg.array, dk = A.aDk.array;
+  g.W[3 * k] = x; g.W[3 * k + 1] = y; g.W[3 * k + 2] = z;
+  pos[3 * k] = sx(x); pos[3 * k + 1] = z / 1000 * S.ve; pos[3 * k + 2] = sz(y);
+  nrm[3 * k] = nx; nrm[3 * k + 1] = ny; nrm[3 * k + 2] = nz;
+  P[0] = x; P[1] = y; P[2] = z; A.aZ0.array[k] = restorePoint(P, TS, NS, D); A.aElev.array[k] = z;
+  for (let i = 0; i < 4; i++) { f0[4 * k + i] = D[i]; f1[4 * k + i] = D[4 + i]; ig[4 * k + i] = IGV[i]; dk[4 * k + i] = IGV[4 + i]; }
+}
+function fd(g, v, f) { return f < 4 ? g.attributes.aF0.array[4 * v + f] : g.attributes.aF1.array[4 * v + f - 4]; }
+function triangulate(g) {
+  let nv = g.nb, ni = 0; const nu = g.nu, cache = new Map(), W = g.W;
+  const side = new Uint8Array(g.nb); // bit f set: vertex is above fault f
+  for (let v = 0; v < g.nb; v++) { let m = 0; for (let f = 0; f < NF; f++) if (fd(g, v, f) > 0) m |= 1 << f; side[v] = m; }
+  const push = v => { if (ni >= g.idx.length) { const b = new Uint32Array(Math.ceil(g.idx.length * 1.5)); b.set(g.idx); g.idx = b; g.setIndex(new THREE.BufferAttribute(b, 1)); } g.idx[ni++] = v; };
+  const split = (i, j, f) => { // vertices on i's side and on j's side of fault f along edge i-j
+    const key = (i < j ? i + "," + j : j + "," + i) + "," + f, hit = cache.get(key);
+    if (hit) return i < j ? hit : [hit[1], hit[0]];
+    const si = fd(g, i, f) > 0; let lo = 0, hi = 1;
+    for (let it = 0; it < 13; it++) { const m = (lo + hi) / 2; for (let a = 0; a < 3; a++) P[a] = W[3 * i + a] + (W[3 * j + a] - W[3 * i + a]) * m;
+      restorePoint(P, TS, NS, D); if ((D[f] > 0) === si) lo = m; else hi = m; }
+    const N = g.attributes.normal.array, out = [];
+    for (const t of [lo, hi]) { const k = nv++; const L = a => W[3 * i + a] + (W[3 * j + a] - W[3 * i + a]) * t, Nn = a => N[3 * i + a] + (N[3 * j + a] - N[3 * i + a]) * t;
+      const n0 = Nn(0), n1 = Nn(1), n2 = Nn(2); vtx(g, k, L(0), L(1), L(2), n0, n1, n2); out.push(k); }
+    cache.set(key, i < j ? out : [out[1], out[0]]); return out;
+  };
+  const tri = (a, b, c) => {
+    if (((side[a] ^ side[b]) | (side[a] ^ side[c])) === 0) { push(a); push(b); push(c); return; }
+    let polys = null;
+    for (let f = 0; f < NF; f++) {
+      if (polys === null) { const sa = fd(g, a, f) > 0; if ((fd(g, b, f) > 0) === sa && (fd(g, c, f) > 0) === sa) continue; polys = [[a, b, c]]; }
+      const next = [];
+      for (const poly of polys) {
+        const sd = poly.map(v => fd(g, v, f) > 0);
+        if (sd.every(s => s === sd[0])) { next.push(poly); continue; }
+        const pp = [], nn = [];
+        for (let q = 0; q < poly.length; q++) { const v = poly[q], w = poly[(q + 1) % poly.length], s = sd[q];
+          (s ? pp : nn).push(v);
+          if (s !== sd[(q + 1) % poly.length]) { const [sv, sw] = split(v, w, f); (s ? pp : nn).push(sv); (s ? nn : pp).push(sw); } }
+        next.push(pp, nn);
+      }
+      polys = next;
+    }
+    if (polys === null) { push(a); push(b); push(c); return; }
+    for (const poly of polys) for (let q = 1; q + 1 < poly.length; q++) { push(poly[0]); push(poly[q]); push(poly[q + 1]); }
+  };
+  for (let j = 0; j < g.nv - 1; j++) for (let i = 0; i < nu - 1; i++) { const a = j * nu + i, b = a + 1, c = a + nu, d = c + 1; tri(a, c, b); tri(b, c, d); }
+  g.setDrawRange(0, ni); g.nverts = nv;
+  for (const [n] of ATTR) g.attributes[n].needsUpdate = true; g.index.needsUpdate = true;
+}
+
+const topGeom = makeGrid(NX, NY);
+const walls = { S: makeGrid(NX, NZ), N: makeGrid(NX, NZ), W: makeGrid(NY, NZ), E: makeGrid(NY, NZ), B: makeGrid(30, 42) };
+const group = new THREE.Group(); scene.add(group);
+const MESHES = [];
+for (const g of [topGeom, ...Object.values(walls)]) { const m = new THREE.Mesh(g, makeMaterial(g === topGeom)); m.frustumCulled = false; group.add(m); MESHES.push(m);
+  g.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 60); }
+// Outline of the full model box (what erosion removed is the empty space inside it).
+const boxLines = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)), new THREE.LineBasicMaterial({ color: 0x55636e, transparent: true, opacity: 0.6 }));
+group.add(boxLines);
+
+// km scene coordinates, centred: X = east, Y = up, Z = south
+function sx(x) { return (x - 5000) / 1000; }
+function sz(y) { return -(y - 7000) / 1000; }
+
+// ------------------------------------------------------------- updating
+const P = [0, 0, 0], D = new Float64Array(NF);
+let surf = new Float64Array(NX * NY), ySouth = 0;
+
+function computeSurface(ts, ns) {
+  const x0 = EXTENT.x0, x1 = EXTENT.x1, y0 = S.slice, y1 = EXTENT.y1; ySouth = y0;
+  const base = new Float64Array(NX * NY);
+  for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) {
+    const x = x0 + (x1 - x0) * i / (NX - 1), y = y0 + (y1 - y0) * j / (NY - 1);
+    base[j * NX + i] = S.level + (S.topo === "flat" ? 0 : S.relief * 0.5 * hills(x, y) * (S.topo === "litho" ? 0.45 : 1));
+  }
+  let h = base;
+  if (S.topo === "litho" && S.relief > 0) {
+    for (let pass = 0; pass < 2; pass++) {
+      const r = new Float64Array(NX * NY);
+      for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) {
+        const k = j * NX + i; P[0] = x0 + (x1 - x0) * i / (NX - 1); P[1] = y0 + (y1 - y0) * j / (NY - 1); P[2] = h[k];
+        r[k] = HARD[rockAt(restorePoint(P, ts, ns, D), IGV)] * S.relief;
+      }
+      blur(r, NX, NY, 3); blur(r, NX, NY, 3);
+      const hn = new Float64Array(NX * NY); for (let k = 0; k < hn.length; k++) hn[k] = base[k] + r[k] - 0.35 * S.relief; h = hn;
+    }
+  }
+  for (let k = 0; k < h.length; k++) h[k] = Math.max(EXTENT.z0 + 40, Math.min(EXTENT.z1, h[k]));
+  surf = h;
+}
+function blur(a, nx, ny, r) {
+  const t = new Float64Array(a.length);
+  for (let j = 0; j < ny; j++) { let acc = 0, cnt = 0; for (let i = -r; i <= r; i++) { if (i >= 0 && i < nx) { acc += a[j * nx + i]; cnt++; } }
+    for (let i = 0; i < nx; i++) { t[j * nx + i] = acc / cnt; const ia = i - r, ib = i + r + 1; if (ia >= 0) { acc -= a[j * nx + ia]; cnt--; } if (ib < nx) { acc += a[j * nx + ib]; cnt++; } } }
+  for (let i = 0; i < nx; i++) { let acc = 0, cnt = 0; for (let j = -r; j <= r; j++) { if (j >= 0 && j < ny) { acc += t[j * nx + i]; cnt++; } }
+    for (let j = 0; j < ny; j++) { a[j * nx + i] = acc / cnt; const ja = j - r, jb = j + r + 1; if (ja >= 0) { acc -= t[ja * nx + i]; cnt--; } if (jb < ny) { acc += t[jb * nx + i]; cnt++; } } }
+}
+
+const exposed = new Set();
+function update() {
+  for (const k in IGT) IGT[k] = playT !== null && S[k] >= 2 && playT < S[k] - 1 - 1e-6 ? 0 : S[k];
+  const [ts, ns] = slips(); TS = ts; NS = ns; igUniforms();
+  computeSurface(ts, ns);
+  const x0 = EXTENT.x0, x1 = EXTENT.x1, y0 = ySouth, y1 = EXTENT.y1, zb = EXTENT.z0;
+  const dxg = (x1 - x0) / (NX - 1), dyg = (y1 - y0) / (NY - 1);
+  exposed.clear();
+  const Ig = topGeom.attributes.aIg.array, Dk = topGeom.attributes.aDk.array, row = new Float64Array(8);
+  for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) {
+    const k = j * NX + i, x = x0 + dxg * i, y = y0 + dyg * j;
+    const hx = (surf[j * NX + Math.min(NX - 1, i + 1)] - surf[j * NX + Math.max(0, i - 1)]) / (dxg * (i > 0 && i < NX - 1 ? 2 : 1));
+    const hy = (surf[Math.min(NY - 1, j + 1) * NX + i] - surf[Math.max(0, j - 1) * NX + i]) / (dyg * (j > 0 && j < NY - 1 ? 2 : 1));
+    const nx = -S.ve * hx, nz = S.ve * hy, nl = Math.hypot(nx, 1, nz);
+    vtx(topGeom, k, x, y, surf[k], nx / nl, 1 / nl, nz / nl);
+    for (let q = 0; q < 4; q++) { row[q] = Ig[4 * k + q]; row[4 + q] = Dk[4 * k + q]; }
+    exposed.add(rockAt(topGeom.attributes.aZ0.array[k], row));
+  }
+  triangulate(topGeom);
+  const wall = (g, nu, xyAt, topAt, n) => {
+    for (let r = 0; r < NZ; r++) for (let c = 0; c < nu; c++) { const [x, y] = xyAt(c); const zt = topAt(c); const z = zb + (zt - zb) * r / (NZ - 1); vtx(g, r * nu + c, x, y, z, n[0], n[1], n[2]); }
+    triangulate(g);
+  };
+  wall(walls.S, NX, c => [x0 + (x1 - x0) * c / (NX - 1), y0], c => surf[c], [0, 0, 1]);
+  wall(walls.N, NX, c => [x0 + (x1 - x0) * c / (NX - 1), y1], c => surf[(NY - 1) * NX + c], [0, 0, -1]);
+  wall(walls.W, NY, c => [x0, y0 + (y1 - y0) * c / (NY - 1)], c => surf[c * NX], [-1, 0, 0]);
+  wall(walls.E, NY, c => [x1, y0 + (y1 - y0) * c / (NY - 1)], c => surf[c * NX + NX - 1], [1, 0, 0]);
+  const b = walls.B; for (let r = 0; r < b.nv; r++) for (let c = 0; c < b.nu; c++) vtx(b, r * b.nu + c, x0 + (x1 - x0) * c / (b.nu - 1), y0 + (y1 - y0) * r / (b.nv - 1), zb, 0, -1, 0);
+  triangulate(b);
+  // box outline: full model volume
+  boxLines.scale.set((x1 - x0) / 1000, (EXTENT.z1 - zb) / 1000 * S.ve, (y1 - y0) / 1000);
+  boxLines.position.set(sx((x0 + x1) / 2), (EXTENT.z1 + zb) / 2000 * S.ve, sz((y0 + y1) / 2));
+  group.position.y = -0.75 * S.ve;
+  updateReadouts(ts, ns);
+  if (typeof placeMap === "function") { placeMap(); requestMap(); }
+  if (typeof showPick === "function" && pick) showPick();
+}
+
+// ------------------------------------------------------------------- UI
+const $ = id => document.getElementById(id);
+function buildColumn() {
+  const col = $("column"); col.innerHTML = "";
+  for (let i = UNITS.length - 1; i >= 0; i--) {
+    const [name, th, color] = UNITS[i];
+    const row = document.createElement("div"); row.className = "unit"; row.id = "u" + i;
+    row.innerHTML = `<span class="sw" style="background:${color}"></span><span class="nm">${name}</span><span class="th">${i === 0 ? "" : th + " m"}</span>`;
+    col.appendChild(row);
+  }
+}
+function updateReadouts(ts, ns) {
+  $("shortOut").textContent = (S.short * MAXSHORT / 1000).toFixed(1) + " km";
+  $("extOut").textContent = (S.ext * MAXEXT / 1000).toFixed(1) + " km";
+  $("levelOut").textContent = S.level.toFixed(0) + " m";
+  $("reliefOut").textContent = S.relief.toFixed(0) + " m";
+  $("sliceOut").textContent = (S.slice / 1000).toFixed(1) + " km";
+  $("veOut").textContent = S.ve.toFixed(1) + "×";
+  for (const k of ["nThrust", "nNormal"]) $(k + "Out").textContent = S[k];
+  $("rampDipOut").textContent = S.rampDip + "°"; $("normalDipOut").textContent = S.normalDip + "°";
+  for (let i = 0; i < UNITS.length; i++) $("u" + i).classList.toggle("on", exposed.has(i));
+  ["plutonT", "sillT", "dikeT"].forEach((id, i) => document.querySelector(`label[for=${id}]`).classList.toggle("on", exposed.has(NU + i)));
+  $("plutonTopOut").textContent = S.plutonTop + " m"; $("plutonROut").textContent = (S.plutonR / 1000).toFixed(2) + " km";
+  $("nDikeOut").textContent = S.nDike; $("dikeTrendOut").textContent = "N" + S.dikeTrend + "°E";
+  const active = ts.filter(s => s > 0).length;
+  let stage = "Undeformed layer cake";
+  if (active) stage = `Compression: ${active} of ${THRUSTS.length} thrust${THRUSTS.length > 1 ? "s" : ""} active`;
+  if (S.ext > 0) stage += (active ? " · " : "") + `Extension: ${NORMALS.length} normal fault${NORMALS.length > 1 ? "s" : ""}`;
+  $("stage").textContent = stage;
+  $("shortHint").textContent = active ? `Thrust ${active} is moving now; earlier thrust sheets ride piggyback on it.` : "Thrusts form one after another, toward the foreland (east).";
+}
+
+let pending = false;
+function schedule() { if (!pending) { pending = true; requestAnimationFrame(() => { pending = false; update(); }); } }
+function bind(id, key, parse, rebuild) {
+  $(id).addEventListener("input", e => { if (!playing) playT = null; S[key] = parse(e.target.value); if (rebuild) buildFaults(); schedule(); });
+}
+bind("short", "short", parseFloat); bind("ext", "ext", parseFloat); bind("level", "level", parseFloat);
+bind("relief", "relief", parseFloat); bind("slice", "slice", parseFloat); bind("ve", "ve", parseFloat);
+bind("topo", "topo", v => v); bind("nThrust", "nThrust", v => parseInt(v), true); bind("rampDip", "rampDip", v => parseInt(v), true);
+bind("decol", "decol", parseFloat, true); bind("nNormal", "nNormal", v => parseInt(v), true);
+bind("normalDip", "normalDip", v => parseInt(v), true); bind("normalSense", "normalSense", v => v, true);
+const WHEN = ["Off", "Before thrusting", "After thrusting", "After extension (youngest)"];
+for (const id of ["plutonT", "sillT", "dikeT"]) { $(id).innerHTML = WHEN.map((w, i) => `<option value="${i}"${S[id] === i ? " selected" : ""}>${w}</option>`).join(""); bind(id, id, v => parseInt(v)); }
+for (const id of ["plutonTop", "plutonR", "sillHost", "nDike", "dikeTrend"]) bind(id, id, v => parseInt(v));
+$("v3d").addEventListener("click", view3d); $("vtop").addEventListener("click", viewMap);
+$("vmap").addEventListener("click", () => { S.map = !S.map; $("vmap").textContent = S.map ? "Map: on" : "Map: off"; $("vmap").classList.toggle("primary", S.map); $("vmap").setAttribute("aria-pressed", S.map); placeMap(); requestMap(); });
+$("reset").addEventListener("click", () => { stopPlay(false); playT = null; $("story").hidden = true; S.short = 0; S.ext = 0; $("short").value = 0; $("ext").value = 0; schedule(); });
+
+// Play history: a timeline of beats, each with a short caption about what to watch.
+let playing = null, beat = 0, beatT = 0, BEATS = [];
+const WHEN_TXT = { 1: "before thrusting", 2: "after thrusting but before extension", 3: "after extension, the youngest event" };
+const IG_NAME = { plutonT: "pluton", sillT: "sill", dikeT: "dikes" };
+function igList(stage) { const a = Object.keys(IG_NAME).filter(k => S[k] === stage).map(k => IG_NAME[k]); return a.length > 1 ? a.slice(0, -1).join(", ") + " and " + a[a.length - 1] : a[0] || ""; }
+function listJoin(a) { return a.length > 1 ? a.slice(0, -1).join(", ") + " and " + a[a.length - 1] : String(a[0]); }
+function km(v) { return (v / 1000).toFixed(1); }
+function buildBeats() {
+  const pre = igList(1), mid = igList(2), late = igList(3);
+  const thrustCap = () => {
+    const k = TS.filter(s => s > 0).length || 1;
+    return [
+      "Thrust 1 breaks along the décollement, a weak shale, then ramps up through the stiff carbonates. Watch the hanging wall bend as it climbs the ramp: a fault-bend fold.",
+      "Thrust 2 breaks farther east, in the footwall of Thrust 1. The older sheet and its fold ride piggyback, so the old fault gets folded and carried.",
+      "Look across each thrust trace on the map: older rocks now sit on younger, and the same units repeat from west to east.",
+      "Slip dies out to the north and south, so faults end inside the map and folds plunge. Look for outcrop bands that curve and close near the fault tips.",
+      "Each new thrust adds to the stack. Total shortening so far: " + km(S.short * MAXSHORT) + " km." ][Math.min(k, 5) - 1];
+  };
+  BEATS = [
+    { d: 5, t0: 0, t1: 0, cap: () => "A layer cake: about 2.8 km of Cambrian to Cretaceous strata lying flat on Archean gneiss. Flat beds make contacts follow the topography on the map." +
+      (pre ? ` The ${pre} ${pre.includes("and") || pre === "dikes" ? "are" : "is"} already in place, so watch the faults carry and offset ${pre.includes("and") || pre === "dikes" ? "them" : "it"}.` : "") },
+    { d: 22, t0: 0, t1: 1, cap: thrustCap },
+    { d: 5, t0: 1, t1: 1, cap: () => mid ? `Thrusting has stopped. Now the ${mid} intrude${mid === "pluton" || mid === "sill" ? "s" : ""}. Being younger, ${mid === "pluton" || mid === "sill" ? "it cuts" : "they cut"} straight across the thrusts and folds.`
+      : `Thrusting has stopped after ${km(MAXSHORT)} km of shortening. On the map, which units repeat, and where do the folds plunge?` },
+    { d: 6, t0: 1, t1: 1.5, cap: () => "Stretching begins: listric normal faults cut the thrust stack. Their hanging walls slide down the curved faults and tilt back toward them (rollover)." },
+    { d: 6, t0: 1.5, t1: 2, cap: () => "Across a normal fault, younger rocks drop against older ones: the opposite of a thrust. At the surface part of the section goes missing instead of repeating." },
+    { d: 7, t0: 2, t1: 2, cap: () => (late ? `Last, the ${late} intrude${late === "pluton" || late === "sill" ? "s" : ""} and cut${late === "pluton" || late === "sill" ? "s" : ""} straight across every fault and fold. ` : "") +
+      "Your turn: slide the land surface down to see deeper levels, or click any spot on the map to ask what is happening there." },
+  ];
+}
+function showStory() {
+  const b = BEATS[beat]; if (!b) return;
+  $("story").hidden = false; $("storyStep").textContent = `${beat + 1} of ${BEATS.length}`;
+  const txt = b.cap(); if ($("storyText").textContent !== txt) $("storyText").textContent = txt;
+}
+function stopPlay(done) { if (playing) cancelAnimationFrame(playing); playing = null; $("play").textContent = "▶ Play history";
+  if (done) { playT = null; update(); } }
+$("storyX").addEventListener("click", () => { $("story").hidden = true; });
+$("play").addEventListener("click", () => {
+  if (playing) { stopPlay(false); return; }
+  buildBeats();
+  const tNow = S.short + S.ext;
+  if (playT === null || Math.abs(playT - tNow) > 1e-3) { beat = 0; beatT = 0; } // resume a paused run, otherwise start from the layer cake
+  $("play").textContent = "❚❚ Pause";
+  const speed = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 2 : 1;
+  let last = performance.now();
+  const step = now => {
+    const dt = Math.min(0.25, (now - last) / 1000) * speed; last = now; beatT += dt;
+    while (beat < BEATS.length && beatT >= BEATS[beat].d) { beatT -= BEATS[beat].d; beat++; }
+    if (beat >= BEATS.length) { beat = BEATS.length - 1; beatT = BEATS[beat].d; showStory(); stopPlay(true); return; }
+    const b = BEATS[beat], t = b.t0 + (b.t1 - b.t0) * Math.min(1, beatT / b.d);
+    playT = t; S.short = Math.min(1, t); S.ext = Math.max(0, Math.min(1, t - 1));
+    $("short").value = S.short; $("ext").value = S.ext; update(); showStory();
+    playing = requestAnimationFrame(step);
+  };
+  playing = requestAnimationFrame(step);
+});
+
+// ------------------------------------------------------------- map view
+// A printed-style geologic map drawn on demand from the current block: unit colors, contacts,
+// fault traces with symbols, strike/dip measurements, labels, legend, scale and north arrow.
+const ABBR = ["Agn", "Cf", "Cw", "Cmp", "Djt", "Ml", "Mmc", "MPa", "Pq", "Pp", "TRdt", "Jem", "Kk", "Kbf"];
+
+function surfaceAt(x, y) { // bilinear from the current land-surface grid
+  const fx = (x - EXTENT.x0) / (EXTENT.x1 - EXTENT.x0) * (NX - 1), fy = (y - ySouth) / (EXTENT.y1 - ySouth) * (NY - 1);
+  const i = Math.max(0, Math.min(NX - 2, Math.floor(fx))), j = Math.max(0, Math.min(NY - 2, Math.floor(fy)));
+  const u = Math.min(1, Math.max(0, fx - i)), v = Math.min(1, Math.max(0, fy - j));
+  const a = surf[j * NX + i], b = surf[j * NX + i + 1], c = surf[(j + 1) * NX + i], d = surf[(j + 1) * NX + i + 1];
+  return a * (1 - u) * (1 - v) + b * u * (1 - v) + c * (1 - u) * v + d * u * v;
+}
+
+// Marching squares: zero-level line segments of field F (nx*ny) at `level`; skip cells where mask is set.
+function contourSegs(F, nx, ny, level, mask) {
+  const segs = [];
+  const pt = (i, j, k) => { // point on edge k of cell (i,j): 0 bottom, 1 right, 2 top, 3 left
+    let a, b, ia, ja, ib, jb, id;
+    if (k === 0) { ia = i; ja = j; ib = i + 1; jb = j; id = 2 * (j * nx + i); }
+    else if (k === 1) { ia = i + 1; ja = j; ib = i + 1; jb = j + 1; id = 2 * (j * nx + i + 1) + 1; }
+    else if (k === 2) { ia = i; ja = j + 1; ib = i + 1; jb = j + 1; id = 2 * ((j + 1) * nx + i); }
+    else { ia = i; ja = j; ib = i; jb = j + 1; id = 2 * (j * nx + i) + 1; }
+    a = F[ja * nx + ia] - level; b = F[jb * nx + ib] - level; const t = a / (a - b);
+    return [ia + (ib - ia) * t, ja + (jb - ja) * t, id];
+  };
+  for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx - 1; i++) {
+    if (mask && mask[j * nx + i]) continue;
+    const v0 = F[j * nx + i] - level, v1 = F[j * nx + i + 1] - level, v2 = F[(j + 1) * nx + i + 1] - level, v3 = F[(j + 1) * nx + i] - level;
+    const c = (v0 > 0 ? 1 : 0) | (v1 > 0 ? 2 : 0) | (v2 > 0 ? 4 : 0) | (v3 > 0 ? 8 : 0);
+    if (c === 0 || c === 15) continue;
+    const E = { 1: [[3, 0]], 2: [[0, 1]], 3: [[3, 1]], 4: [[1, 2]], 5: [[3, 2], [0, 1]], 6: [[0, 2]], 7: [[3, 2]],
+      8: [[2, 3]], 9: [[0, 2]], 10: [[0, 3], [1, 2]], 11: [[1, 2]], 12: [[1, 3]], 13: [[0, 1]], 14: [[0, 3]] }[c];
+    for (const [ka, kb] of E) segs.push([pt(i, j, ka), pt(i, j, kb)]);
+  }
+  return segs;
+}
+function chain(segs) { // join segments sharing edge points into polylines
+  const by = new Map(); segs.forEach((s, n) => { for (const p of s) { if (!by.has(p[2])) by.set(p[2], []); by.get(p[2]).push(n); } });
+  const used = new Uint8Array(segs.length), lines = [];
+  for (let n = 0; n < segs.length; n++) {
+    if (used[n]) continue; used[n] = 1;
+    const line = [segs[n][0], segs[n][1]];
+    for (const dir of [1, 0]) {
+      for (;;) {
+        const end = dir ? line[line.length - 1] : line[0];
+        const next = (by.get(end[2]) || []).find(m => !used[m]); if (next === undefined) break;
+        used[next] = 1; const s = segs[next]; const q = s[0][2] === end[2] ? s[1] : s[0];
+        if (dir) line.push(q); else line.unshift(q);
+      }
+    }
+    lines.push(line);
+  }
+  return lines;
+}
+
+// The map: a sheet floating above the block at the same scale, redrawn from the live land surface.
+const TW = 1000;                                  // texture width in px (10 m per px)
+const mapCanvas = document.createElement("canvas");
+const mapTex = new THREE.CanvasTexture(mapCanvas);
+mapTex.anisotropy = 4;
+const mapMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: mapTex, side: THREE.DoubleSide }));
+mapMesh.rotation.x = -Math.PI / 2;
+const guides = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0xe8e4da, transparent: true, opacity: 0.35 }));
+group.add(mapMesh); group.add(guides);
+let mapTimer = null, lastMapDraw = 0;
+
+function requestMap() {
+  mapMesh.visible = guides.visible = S.map;
+  if (!S.map) return;
+  clearTimeout(mapTimer);
+  const now = performance.now();
+  if (playing && now - lastMapDraw < 250) return;
+  mapTimer = setTimeout(drawMapTexture, playing ? 0 : 90);
+}
+
+function placeMap() {
+  const xr = EXTENT.x1 - EXTENT.x0, yr = EXTENT.y1 - ySouth;
+  let top = -Infinity; for (const v of surf) top = Math.max(top, v);
+  const yMap = top / 1000 * S.ve + 0.45;
+  mapMesh.scale.set(xr / 1000, yr / 1000, 1);
+  mapMesh.position.set(sx((EXTENT.x0 + EXTENT.x1) / 2), yMap, sz((ySouth + EXTENT.y1) / 2));
+  const c = [[EXTENT.x0, ySouth, surf[0]], [EXTENT.x1, ySouth, surf[NX - 1]], [EXTENT.x0, EXTENT.y1, surf[(NY - 1) * NX]], [EXTENT.x1, EXTENT.y1, surf[NX * NY - 1]]];
+  const pts = []; for (const [x, y, z] of c) pts.push(sx(x), z / 1000 * S.ve, sz(y), sx(x), yMap, sz(y));
+  guides.geometry.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
+}
+
+function drawMapTexture() {
+  lastMapDraw = performance.now();
+  const [ts, ns] = slips();
+  const xr = EXTENT.x1 - EXTENT.x0, yr = EXTENT.y1 - ySouth, TH = Math.round(TW * yr / xr);
+  if (mapCanvas.width !== TW || mapCanvas.height !== TH) { mapCanvas.width = TW; mapCanvas.height = TH; }
+  const g = mapCanvas.getContext("2d");
+  const ink = "#1d1b18", paper = "#f4f0e6";
+  const Z0 = topGeom.attributes.aZ0.array, F0 = topGeom.attributes.aF0.array, F1 = topGeom.attributes.aF1.array;
+  const nx = NX, ny = NY, N = nx * ny;
+  const FD = []; for (let f = 0; f < NF; f++) { const a = new Float32Array(N); for (let k = 0; k < N; k++) a[k] = f < 4 ? F0[4 * k + f] : F1[4 * k + f - 4]; FD.push(a); }
+  const active = []; for (let f = 0; f < NF; f++) if (FD[f].some(v => v < 1e5)) active.push(f);
+  const mask = new Uint8Array(N);
+  for (const f of active) { const F = FD[f]; for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx - 1; i++) {
+    const k = j * nx + i, s0 = F[k] > 0; if ((F[k + 1] > 0) !== s0 || (F[k + nx] > 0) !== s0 || (F[k + nx + 1] > 0) !== s0) mask[k] = 1; } }
+  // grid coords <-> texture px
+  const PX = gi => gi / (nx - 1) * TW, PY = gj => (1 - gj / (ny - 1)) * TH;
+  const toPx = p => [PX(p[0]), PY(p[1])];
+
+  // Unit fill: bilinear original elevation inside cells; exact evaluation inside fault-cut cells.
+  const rgb = UNITS.map(u => u[2]).concat(IGNEOUS.map(u => u[1])).map(h => { const c = new THREE.Color(h); return [c.r, c.g, c.b].map(v => Math.round(255 * (0.85 * v + 0.15))); });
+  const img = g.createImageData(TW, TH), data = img.data, ign = g.createImageData(TW, TH), idata = ign.data;
+  const IGA = topGeom.attributes.aIg.array, DKA = topGeom.attributes.aDk.array, ig = new Float64Array(8), anyIg = IGT.plutonT || IGT.sillT || IGT.dikeT;
+  const R = new Int16Array(N); // rock at each grid node (for labels)
+  for (let k = 0; k < N; k++) { for (let q = 0; q < 4; q++) { ig[q] = IGA[4 * k + q]; ig[4 + q] = DKA[4 * k + q]; } R[k] = rockAt(Z0[k], ig); }
+  for (let py = 0; py < TH; py++) {
+    const gj = (1 - (py + 0.5) / TH) * (ny - 1), j = Math.min(ny - 2, Math.floor(gj)), v = gj - j;
+    for (let px = 0; px < TW; px++) {
+      const gi = (px + 0.5) / TW * (nx - 1), i = Math.min(nx - 2, Math.floor(gi)), u = gi - i, k = j * nx + i;
+      let z0;
+      if (mask[k]) { const x = EXTENT.x0 + gi / (nx - 1) * xr, y = ySouth + gj / (ny - 1) * yr; P[0] = x; P[1] = y; P[2] = surfaceAt(x, y); z0 = restorePoint(P, ts, ns, D, ig); }
+      else {
+        const w0 = (1 - u) * (1 - v), w1 = u * (1 - v), w2 = (1 - u) * v, w3 = u * v;
+        z0 = Z0[k] * w0 + Z0[k + 1] * w1 + Z0[k + nx] * w2 + Z0[k + nx + 1] * w3;
+        if (anyIg) for (let q = 0; q < 8; q++) { const A = q < 4 ? IGA : DKA, qq = q & 3;
+          ig[q] = A[4 * k + qq] * w0 + A[4 * (k + 1) + qq] * w1 + A[4 * (k + nx) + qq] * w2 + A[4 * (k + nx + 1) + qq] * w3; }
+      }
+      const r = anyIg ? rockAt(z0, ig) : unitOf(z0), c = rgb[r], o = 4 * (py * TW + px);
+      data[o] = c[0]; data[o + 1] = c[1]; data[o + 2] = c[2]; data[o + 3] = 255;
+      if (r >= NU) { idata[o] = c[0]; idata[o + 1] = c[1]; idata[o + 2] = c[2]; idata[o + 3] = 255; }
+    }
+  }
+  g.putImageData(img, 0, 0);
+  const stroke = (lines, w, col) => { g.lineWidth = w; g.strokeStyle = col; g.lineJoin = "round"; g.lineCap = "round";
+    for (const l of lines) { if (l.length < 2) continue; g.beginPath(); l.forEach((p, n) => { const [a, b] = toPx(p); n ? g.lineTo(a, b) : g.moveTo(a, b); }); g.stroke(); } };
+  // Contacts
+  for (const c of CONTACTS) stroke(chain(contourSegs(Z0, nx, ny, c, mask)), 1.6, "rgba(29,27,24,0.85)");
+  // Intrusions cover the contacts they cut; the pluton gets an outline
+  if (anyIg) { const ic = document.createElement("canvas"); ic.width = TW; ic.height = TH; ic.getContext("2d").putImageData(ign, 0, 0); g.drawImage(ic, 0, 0); }
+  if (IGT.plutonT) { const PF = new Float32Array(N); for (let k = 0; k < N; k++) PF[k] = IGA[4 * k + 1]; stroke(chain(contourSegs(PF, nx, ny, 0, mask)), 2.2, "rgba(60,10,30,0.9)"); }
+
+  // Folds: hinge traces where the east-west dip direction reverses (structures here trend roughly N-S).
+  const cx = 76, cy = Math.round(76 * yr / xr), DX = new Float32Array(cx * cy), FM = new Uint8Array(cx * cy);
+  const h = 8;
+  for (let j = 0; j < cy; j++) for (let i = 0; i < cx; i++) {
+    const x = EXTENT.x0 + xr * i / (cx - 1), y = ySouth + yr * j / (cy - 1), z = surfaceAt(x, y), gr = [0, 0, 0];
+    let nearFault = false;
+    for (let a = 0; a < 3; a++) { const q = [x, y, z], r = [x, y, z]; q[a] += h; r[a] -= h;
+      const zq = restorePoint(q, ts, ns, D); if (D.some(d => Math.abs(d) < 160)) nearFault = true; gr[a] = (zq - restorePoint(r, ts, ns, D)) / (2 * h); }
+    const m = Math.hypot(gr[0], gr[1], gr[2]) || 1; let ex = gr[0] / m; if (gr[2] < 0) ex = -ex; // horizontal part of the upward normal points down-dip
+    DX[j * cx + i] = ex; FM[j * cx + i] = nearFault ? 1 : 0;
+  }
+  blur(DX, cx, cy, 2);
+  const fmask = new Uint8Array(cx * cy);
+  for (let j = 0; j < cy - 1; j++) for (let i = 0; i < cx - 1; i++) { const k = j * cx + i;
+    if (FM[k] || FM[k + 1] || FM[k + cx] || FM[k + cx + 1]) fmask[k] = 1;
+    else if (Math.max(Math.abs(DX[k]), Math.abs(DX[k + 1]), Math.abs(DX[k + cx]), Math.abs(DX[k + cx + 1])) < 0.035) fmask[k] = 1; }
+  const hinges = chain(contourSegs(DX, cx, cy, 0, fmask)).filter(l => l.length > 6);
+  const fPx = p => [p[0] / (cx - 1) * TW, (1 - p[1] / (cy - 1)) * TH];
+  const sampleDX = (gi, gj) => { const i = Math.max(0, Math.min(cx - 1, Math.round(gi))), j = Math.max(0, Math.min(cy - 1, Math.round(gj))); return DX[j * cx + i]; };
+  for (const l of hinges) {
+    const mid = l[Math.floor(l.length / 2)];
+    const anticline = sampleDX(mid[0] + 1.5, mid[1]) - sampleDX(mid[0] - 1.5, mid[1]) > 0;
+    const pts = l.map(fPx);
+    g.lineWidth = 2.4; g.strokeStyle = anticline ? "#8a1f1f" : "#1f3f8a"; g.setLineDash([]);
+    g.beginPath(); pts.forEach(([a, b], n) => n ? g.lineTo(a, b) : g.moveTo(a, b)); g.stroke();
+    // paired arrows across the trace: outward for anticlines, inward for synclines
+    let acc = 0, next = 110;
+    for (let n = 1; n < pts.length; n++) {
+      const [ax, ay] = pts[n - 1], [bx, by] = pts[n], seg = Math.hypot(bx - ax, by - ay); if (!seg) continue;
+      while (acc + seg >= next) {
+        const t = (next - acc) / seg, px = ax + (bx - ax) * t, py = ay + (by - ay) * t, tx = (bx - ax) / seg, ty = (by - ay) / seg, nx2 = -ty, ny2 = tx;
+        g.fillStyle = g.strokeStyle; g.lineWidth = 2.2;
+        for (const sgn of [1, -1]) {
+          const ex = px + nx2 * sgn * 16, ey = py + ny2 * sgn * 16; g.beginPath(); g.moveTo(px, py); g.lineTo(ex, ey); g.stroke();
+          const tipx = anticline ? ex : px + nx2 * sgn * 3, tipy = anticline ? ey : py + ny2 * sgn * 3, dir = anticline ? sgn : -sgn;
+          g.beginPath(); g.moveTo(tipx + nx2 * dir * 6, tipy + ny2 * dir * 6); g.lineTo(tipx + tx * 5, tipy + ty * 5); g.lineTo(tipx - tx * 5, tipy - ty * 5); g.closePath(); g.fill();
+        }
+        next += 260;
+      }
+      acc += seg;
+    }
+  }
+
+  // Faults with symbols on the hanging wall
+  const sampleF = (F, gi, gj) => { const i = Math.max(0, Math.min(nx - 1, Math.round(gi))), j = Math.max(0, Math.min(ny - 1, Math.round(gj))); return F[j * nx + i]; };
+  for (const f of active) {
+    const lines = chain(contourSegs(FD[f], nx, ny, 0)).filter(l => l.length > 3);
+    stroke(lines, 4.2, ink);
+    const thrust = f < 5;
+    for (const l of lines) {
+      const pts = l.map(toPx); let acc = 0, next = 24;
+      for (let n = 1; n < pts.length; n++) {
+        const [ax, ay] = pts[n - 1], [bx, by] = pts[n], seg = Math.hypot(bx - ax, by - ay); if (!seg) continue;
+        while (acc + seg >= next) {
+          const t = (next - acc) / seg, px = ax + (bx - ax) * t, py = ay + (by - ay) * t, tx = (bx - ax) / seg, ty = (by - ay) / seg;
+          let nxv = -ty, nyv = tx;
+          const gi = px / TW * (nx - 1) + nxv * 0.8 * (nx - 1) / TW * 10, gj = (1 - py / TH) * (ny - 1) - nyv * 0.8 * (ny - 1) / TH * 10;
+          if (sampleF(FD[f], gi, gj) < 0) { nxv = -nxv; nyv = -nyv; }
+          g.fillStyle = ink; g.strokeStyle = ink; g.lineWidth = 2.6;
+          if (thrust) { g.beginPath(); g.moveTo(px - tx * 8, py - ty * 8); g.lineTo(px + tx * 8, py + ty * 8); g.lineTo(px + nxv * 13, py + nyv * 13); g.closePath(); g.fill(); }
+          else { g.beginPath(); g.moveTo(px, py); g.lineTo(px + nxv * 13, py + nyv * 13); g.stroke(); g.beginPath(); g.arc(px + nxv * 16, py + nyv * 16, 4.5, 0, 2 * Math.PI); g.fill(); }
+          next += thrust ? 46 : 80;
+        }
+        acc += seg;
+      }
+    }
+  }
+  // Unit labels in broad outcrops
+  g.font = "700 22px Archivo, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+  const placed = [];
+  for (let j = 5; j < ny - 5; j += 7) for (let i = 5; i < nx - 5; i += 7) {
+    const u0 = R[j * nx + i]; let ok = true;
+    for (let dj = -4; dj <= 4 && ok; dj += 2) for (let di = -4; di <= 4; di += 2) { const k = (j + dj) * nx + i + di; if (R[k] !== u0 || mask[k]) { ok = false; break; } }
+    if (!ok) continue; const px = PX(i), py = PY(j);
+    if (placed.some(p => (p[2] === u0 && Math.hypot(p[0] - px, p[1] - py) < 300) || Math.hypot(p[0] - px, p[1] - py) < 80)) continue;
+    placed.push([px, py, u0]); g.lineWidth = 5; g.strokeStyle = "rgba(244,240,230,0.85)"; const lab = u0 < NU ? ABBR[u0] : IGNEOUS[u0 - NU][2]; g.strokeText(lab, px, py); g.fillStyle = ink; g.fillText(lab, px, py);
+  }
+  // Frame, north arrow, 1 km scale
+  g.lineWidth = 6; g.strokeStyle = ink; g.strokeRect(3, 3, TW - 6, TH - 6);
+  const ax = TW - 46, ay = 30; g.fillStyle = ink;
+  g.beginPath(); g.moveTo(ax, ay); g.lineTo(ax - 13, ay + 38); g.lineTo(ax, ay + 29); g.closePath(); g.fill();
+  g.beginPath(); g.moveTo(ax, ay); g.lineTo(ax + 13, ay + 38); g.lineTo(ax, ay + 29); g.closePath(); g.lineWidth = 2; g.stroke();
+  g.font = "700 22px Archivo, sans-serif"; g.lineWidth = 5; g.strokeStyle = paper; g.strokeText("N", ax, ay + 56); g.fillText("N", ax, ay + 56);
+  const sbx = 30, sby = TH - 34, kmPx = TW / (xr / 1000);
+  g.fillStyle = paper; g.fillRect(sbx - 8, sby - 28, 2 * kmPx + 40, 52);
+  for (let k = 0; k < 2; k++) { g.fillStyle = k ? paper : ink; g.fillRect(sbx + k * kmPx, sby, kmPx, 9); g.strokeStyle = ink; g.lineWidth = 2; g.strokeRect(sbx + k * kmPx, sby, kmPx, 9); }
+  g.fillStyle = ink; g.font = "600 16px 'IBM Plex Mono', monospace"; g.textAlign = "center";
+  ["0", "1", "2 km"].forEach((t, k) => g.fillText(t, sbx + k * kmPx, sby - 12));
+  g.font = "600 15px 'Familjen Grotesk', Archivo, sans-serif"; g.textAlign = "right"; g.lineWidth = 4; g.strokeStyle = paper;
+  g.strokeText("3D Structural Geology Explorer · Dougalien Systems", TW - 20, TH - 20); g.fillStyle = ink; g.fillText("3D Structural Geology Explorer · Dougalien Systems", TW - 20, TH - 20);
+  mapTex.needsUpdate = true;
+}
+
+// ------------------------------------------------------- what's happening here?
+// Click the map sheet or the block: a pin marks the spot and a panel explains the rocks, their
+// attitude, the structure they sit in, and why the outcrop pattern looks the way it does.
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+let pick = null;
+const pin = new THREE.Group();
+pin.add(new THREE.Mesh(new THREE.SphereGeometry(0.09, 16, 12), new THREE.MeshBasicMaterial({ color: 0xf0c68a })));
+const pinLine = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0xf0c68a }));
+group.add(pin); group.add(pinLine); pin.visible = pinLine.visible = false;
+const DIRS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+const compass = az => DIRS[Math.round(((az % 360) + 360) % 360 / 45) % 8];
+function attitude(x, y, z) { // bedding from the gradient of original elevation
+  const h = 12, g = [0, 0, 0]; let near = false;
+  for (let a = 0; a < 3; a++) { const q = [x, y, z], r = [x, y, z]; q[a] += h; r[a] -= h;
+    const zq = restorePoint(q, TS, NS, D); if (D.some(d => Math.abs(d) < 30)) near = true; g[a] = (zq - restorePoint(r, TS, NS, D)) / (2 * h); }
+  const m = Math.hypot(g[0], g[1], g[2]); if (!m || near) return null;
+  const up = g[2] >= 0 ? 1 : -1, hx = up * g[0] / m, hy = up * g[1] / m;
+  return { dip: Math.acos(Math.abs(g[2]) / m) * 180 / Math.PI, dir: Math.atan2(hx, hy) * 180 / Math.PI, over: g[2] < 0, east: hx };
+}
+function sides(x, y, z) { restorePoint([x, y, z], TS, NS, D); return Array.from(D, d => d > 0 ? 1 : 0).join(""); }
+function explain(x, y, z, surface) {
+  const q = [x, y, z], ig = new Float64Array(8), z0 = restorePoint(q, TS, NS, D, ig), d = Float64Array.from(D);
+  const r = rockAt(z0, ig), out = [];
+  const name = r < NU ? UNITS[r][0] : IGNEOUS[r - NU][0], color = r < NU ? UNITS[r][2] : IGNEOUS[r - NU][1];
+  let html = `<h3><span class="sw" style="background:${color}"></span>${name}</h3><div class="meta">${km(x)} km E · ${km(y)} km N · ${Math.round(z)} m elevation${surface ? " (land surface)" : ""}</div>`;
+  const sec = (t, ps) => { if (ps.length) html += `<h4>${t}</h4>` + ps.map(p => `<p>${p}</p>`).join(""); };
+  // the rock itself
+  const rock = [];
+  if (r === NU) rock.push(`Granite of a pluton that intruded ${WHEN_TXT[IGT.plutonT]}. ` + ["", "The thrusts carried and sliced it.", "It cuts across the thrusts and folds, but the normal faults offset it.", "It cuts across every fault and fold."][IGT.plutonT]);
+  else if (r === NU + 1) rock.push(`A sill: magma injected along the bedding of the ${UNITS[S.sillHost][0]}, intruded ${WHEN_TXT[IGT.sillT]}. Because it is parallel to bedding (concordant), it folds and crops out just like a bed.`);
+  else if (r === NU + 2) rock.push(`A dike: a steep sheet of magma trending N${S.dikeTrend}°E that cuts across bedding (discordant). It intruded ${WHEN_TXT[IGT.dikeT]}` + (IGT.dikeT === 1 ? ", so every fault that moved later offsets it." : IGT.dikeT === 2 ? ", so the thrusts are cut by it but the normal faults offset it." : ", so nothing offsets it."));
+  else if (r === 0) rock.push("Archean crystalline basement, the floor beneath the sedimentary pile.");
+  else rock.push(`A sedimentary unit ${UNITS[r][1]} m thick, ${r === NU - 1 ? "the youngest unit in the column" : `lying on the ${UNITS[r - 1][0]}`}.`);
+  if (r < NU && IGT.plutonT && ig[1] > 0 && ig[1] < 320) rock.push(`It lies about ${Math.round(ig[1] / 0.8)} m from the pluton, inside its contact aureole: the heat baked it to hornfels or marble.`);
+  sec("Rock", rock);
+  // bedding attitude and fold position
+  const att = r < NU ? attitude(x, y, z) : null, fold = [];
+  if (att) {
+    fold.push(att.dip < 4 ? "Beds are essentially flat here." : `Beds dip ${Math.round(att.dip)}° toward the ${compass(att.dir)}${att.over ? ", and they are overturned (upside down)" : ""}.`);
+    const sAll = sides(x, y, z), W = [x - 450, y], E = [x + 450, y];
+    if (sides(W[0], W[1], surfaceAt(W[0], W[1])) === sAll && sides(E[0], E[1], surfaceAt(E[0], E[1])) === sAll && surface) {
+      const aw = attitude(W[0], W[1], surfaceAt(W[0], W[1])), ae = attitude(E[0], E[1], surfaceAt(E[0], E[1]));
+      const ew = aw ? Math.sin(aw.dip * Math.PI / 180) * aw.east : 0, ee = ae ? Math.sin(ae.dip * Math.PI / 180) * ae.east : 0;
+      if (ew < -0.06 && ee > 0.06) fold.push("Beds dip away from here on both sides: you are near the hinge of an anticline.");
+      else if (ew > 0.06 && ee < -0.06) fold.push("Beds dip in toward here from both sides: you are near the trough of a syncline.");
+    }
+  }
+  sec("Bedding", fold);
+  // structural position
+  const st = [], act = THRUSTS.map((t, i) => TS[i] > 0 ? i : -1).filter(i => i >= 0), above = act.filter(i => d[i] > 0);
+  if (above.length) {
+    const k = Math.min(...above);
+    st.push(`This is the thrust sheet above Thrust ${k + 1}` + (above.length > 1 ? `, which in turn rides on Thrust${above.length > 2 ? "s" : ""} ${listJoin(above.filter(i => i !== k).map(i => i + 1))}.` : "."));
+    if (att && att.dip > 8) st.push(att.east > 0.3 ? "Beds dipping east, toward the foreland, mark the forelimb of the fold that grew as this sheet climbed its ramp." : att.east < -0.3 ? "Beds dipping west mark the backlimb: they tilted as the sheet rode up onto the ramp." : "");
+  } else if (act.length) st.push("Below every thrust: this rock stayed where it was deposited while the sheets above moved east.");
+  NORMALS.forEach((n, i) => { if (NS[i] > 0 && d[5 + i] > 0 && n.local(x, y)[0] > -2500) st.push(`It is in the hanging wall of Normal fault ${i + 1}, so it slid down to the ${n.strike > 300 ? "east" : "west"} during stretching.`); });
+  const moved = Math.hypot(x - q[0], y - q[1]), up = z - z0;
+  if (moved > 60 || Math.abs(up) > 30) st.push(`Since deposition it has moved ${km(moved)} km ${compass(Math.atan2(x - q[0], y - q[1]) * 180 / Math.PI)} and ${up >= 0 ? "risen" : "dropped"} ${Math.abs(Math.round(up))} m.`);
+  let nf = null; for (let f = 0; f < NF; f++) if (d[f] < 1e5 && (!nf || Math.abs(d[f]) < Math.abs(nf.d))) nf = { f, d: d[f] };
+  if (nf && Math.abs(nf.d) < 500) st.push(`${nf.f < 5 ? "Thrust " + (nf.f + 1) : "Normal fault " + (nf.f - 4)} is about ${Math.round(Math.abs(nf.d))} m ${nf.d > 0 ? "below" : "above"} this point.` +
+    (surface ? (nf.f < 5 ? " Across its trace older rocks sit on younger, so units repeat." : " Across its trace younger rocks are dropped against older, so part of the section is missing.") : ""));
+  sec("Structure", st.filter(Boolean));
+  // why the outcrop pattern looks like this
+  const pat = [];
+  if (surface && r < NU && att) {
+    const th = UNITS[r][1], dip = att.dip;
+    if (dip < 10) pat.push("With nearly flat beds, contacts follow the topographic contours, V-ing sharply up valleys, and units spread into wide, irregular outcrops.");
+    else if (dip <= 60) pat.push(`Where contacts cross valleys they V toward the dip direction (rule of V's).` + (r > 0 && r < NU - 1 ? ` On level ground this ${th} m unit makes a band about ${Math.round(th / Math.sin(dip * Math.PI / 180) / 10) * 10} m wide, wider than its thickness because it is tilted.` : ""));
+    else pat.push(`Beds are steep, so contacts run almost straight across hills and valleys` + (r > 0 && r < NU - 1 ? `, and the band is close to the unit's true thickness (${th} m).` : "."));
+    if (S.topo === "litho" && S.relief > 0) { if (HARD[r] >= 0.6) pat.push("This unit resists erosion, so it holds up ridges."); else if (HARD[r] <= 0.25) pat.push("This unit is soft and erodes into valleys."); }
+  } else if (surface && r >= NU) {
+    pat.push(r === NU ? "A pluton's outcrop is the slice through it at today's land surface. Its roof is domed, so lowering the surface widens the outcrop." :
+      r === NU + 1 ? "The sill crops out as a thin band that follows the host bed through folds and faults." : "The dike crops out as a narrow straight line because it is nearly vertical; topography barely bends it.");
+  }
+  if (surface) pat.push("Raise or lower the land surface and watch how this pattern shifts.");
+  sec("Outcrop pattern", pat);
+  return html;
+}
+function showPick() {
+  if (!pick) { $("info").hidden = true; pin.visible = pinLine.visible = false; return; }
+  const z = pick.surface ? surfaceAt(pick.x, pick.y) : pick.z;
+  $("infoBody").innerHTML = explain(pick.x, pick.y, z, pick.surface); $("info").hidden = false;
+  pin.position.set(sx(pick.x), z / 1000 * S.ve, sz(pick.y)); pin.visible = true;
+  const top = S.map ? mapMesh.position.y : z / 1000 * S.ve + 0.4;
+  pinLine.geometry.setAttribute("position", new THREE.Float32BufferAttribute([sx(pick.x), z / 1000 * S.ve, sz(pick.y), sx(pick.x), top, sz(pick.y)], 3)); pinLine.visible = true;
+}
+let downAt = null;
+canvas.addEventListener("pointerdown", e => { downAt = [e.clientX, e.clientY]; });
+canvas.addEventListener("pointerup", e => {
+  if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
+  const rc = canvas.getBoundingClientRect(); ndc.set((e.clientX - rc.left) / rc.width * 2 - 1, -(e.clientY - rc.top) / rc.height * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const hits = ray.intersectObjects(S.map ? [mapMesh, ...MESHES] : MESHES, false); if (!hits.length) return;
+  const h = hits[0];
+  if (h.object === mapMesh) pick = { x: EXTENT.x0 + h.uv.x * (EXTENT.x1 - EXTENT.x0), y: ySouth + h.uv.y * (EXTENT.y1 - ySouth), surface: true };
+  else { const L = group.worldToLocal(h.point.clone()); pick = { x: L.x * 1000 + 5000, y: 7000 - L.z * 1000, z: L.y / S.ve * 1000, surface: h.object === MESHES[0] }; }
+  showPick();
+});
+$("infoX").addEventListener("click", () => { pick = null; showPick(); });
+
+function resize() {
+  const r = canvas.parentElement.getBoundingClientRect();
+  renderer.setSize(r.width, r.height, false); camera.aspect = r.width / Math.max(1, r.height); camera.updateProjectionMatrix();
+}
+window.addEventListener("resize", resize);
+function loop() { controls.update(); renderer.render(scene, camera); requestAnimationFrame(loop); }
+
+// Open in a realistic working state: part-way through compression, surface at the original top.
+buildColumn(); buildFaults();
+S.short = 0.55; $("short").value = S.short;
+resize(); update(); loop();
+</script>
+
+</body>
+</html>
