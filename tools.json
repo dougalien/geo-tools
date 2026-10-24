@@ -6,6 +6,7 @@
   "tools": [
     {
       "slug": "lithonaut",
+      "guide": "guides/lithonaut/",
       "name": "Lithonaut",
       "kind": "game",
       "path": "games/lithonaut/",
@@ -18,6 +19,7 @@
     },
     {
       "slug": "solar-system-adventure",
+      "guide": "guides/solar-system-adventure/",
       "name": "Solar System Adventure",
       "kind": "game",
       "path": "games/solar-system-adventure/",
@@ -29,6 +31,7 @@
     },
     {
       "slug": "structural-geology",
+      "guide": "guides/structural-geology/",
       "name": "3D Structural Geology Explorer",
       "kind": "app",
       "path": "apps/structural-geology/",
@@ -41,6 +44,7 @@
     },
     {
       "slug": "rock-cycle",
+      "guide": "guides/rock-cycle/",
       "name": "The Rock Cycle",
       "kind": "streamlit",
       "url": "https://rock-cycle.streamlit.app/",
@@ -53,6 +57,7 @@
     },
     {
       "slug": "quake",
+      "guide": "guides/quake/",
       "name": "Quake",
       "kind": "streamlit",
       "url": "https://quake-usgs.streamlit.app/",
@@ -64,6 +69,7 @@
     },
     {
       "slug": "river-explorer",
+      "guide": "guides/river-explorer/",
       "name": "River Explorer",
       "kind": "streamlit",
       "url": "https://river-explorer.streamlit.app/",
@@ -76,6 +82,7 @@
     },
     {
       "slug": "resource-horizon",
+      "guide": "guides/resource-horizon/",
       "name": "Resource Horizon",
       "kind": "streamlit",
       "url": "https://resource-horizons.streamlit.app/",
@@ -89,6 +96,7 @@
     },
     {
       "slug": "hydrotherm",
+      "guide": "guides/hydrotherm/",
       "name": "Hydrotherm",
       "kind": "streamlit",
       "url": "https://hydrotherm.streamlit.app/",
@@ -101,6 +109,7 @@
     },
     {
       "slug": "tracecode",
+      "guide": "guides/tracecode/",
       "name": "TraceCode",
       "kind": "streamlit",
       "url": "https://tracecode.streamlit.app/",
@@ -113,6 +122,7 @@
     },
     {
       "slug": "spectrum-earth",
+      "guide": "guides/spectrum-earth/",
       "name": "Spectrum Earth",
       "kind": "streamlit",
       "url": "https://spectrum-earth.streamlit.app/",
@@ -125,6 +135,7 @@
     },
     {
       "slug": "paleo-diet-cruncher",
+      "guide": "guides/paleo-diet-cruncher/",
       "name": "Paleo Diet Cruncher",
       "kind": "streamlit",
       "url": "https://paleodietcruncher.streamlit.app/",

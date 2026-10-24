@@ -102,6 +102,15 @@
     font-weight: 700;
   }
   .open[aria-disabled="true"] { opacity: .45; pointer-events: none; }
+  .guide {
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-weight: 700;
+  }
+  .guide:hover { background: var(--chip); }
   .copy {
     background: transparent;
     border: 1px solid var(--line);
@@ -199,6 +208,7 @@
         <div class="status ${t.status === "ready" ? "ready" : "soon"}"></div>
         <div class="actions">
           <a class="open" target="_blank" rel="noopener">Open</a>
+          <a class="guide">Guide</a>
           <button class="copy" type="button">Copy link</button>
         </div>`;
       card.querySelector("h2").textContent = t.name;
@@ -214,6 +224,13 @@
       const open = card.querySelector(".open");
       open.setAttribute("aria-label", "Open " + t.name);
       if (link) open.href = link; else open.setAttribute("aria-disabled", "true");
+      const guide = card.querySelector(".guide");
+      if (t.guide) {
+        guide.href = t.guide;
+        guide.setAttribute("aria-label", "Guide to " + t.name);
+      } else {
+        guide.remove();
+      }
       const copy = card.querySelector(".copy");
       copy.setAttribute("aria-label", "Copy link to " + t.name);
       if (!link) copy.disabled = true;

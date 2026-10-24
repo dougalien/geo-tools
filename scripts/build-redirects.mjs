@@ -14,6 +14,7 @@ for (const t of tools) {
   } else {
     lines.push(`/${t.slug}  /  302`);
   }
+  if (t.guide) lines.push(`/${t.slug}/guide  /${t.guide}  301`);
 }
 
 writeFileSync("_redirects", lines.join("\n") + "\n");

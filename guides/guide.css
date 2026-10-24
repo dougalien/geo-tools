@@ -1,0 +1,67 @@
+/* Shared look for the Geo-tools guides, in the Dougalien Systems logo palette (matches dougalien.com). */
+:root {
+  --paper: #F4F4F1;
+  --sheet: #FFFFFF;
+  --ink: #1B1E20;
+  --muted: #4A5860;
+  --rule: #D6DBDA;
+  --accent: #3E5C6B;
+  --accent-ink: #FFFFFF;
+  --rust: #B4532A;
+  --sand: #D6B27C;
+  --display: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #14181A; --sheet: #1C2225; --ink: #ECEAE5; --muted: #B4C0C5; --rule: #2C3539;
+    --accent: #9CC0CF; --accent-ink: #0F1518; --rust: #E0825A;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 1.125rem/1.6 var(--body);
+}
+a { color: var(--accent); }
+a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+.wrap { max-width: 44rem; margin: 0 auto; padding: 0 16px; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip { position: absolute; left: 16px; top: -100px; background: var(--sheet); padding: 8px 12px; z-index: 1; }
+.skip:focus { top: 8px; }
+
+.top { border-bottom: 5px solid transparent; border-image: linear-gradient(90deg, var(--sand) 0 22%, #3E5C6B 22% 34%, var(--sand) 34% 62%, #B4532A 62% 70%, var(--sand) 70% 88%, #3E5C6B 88% 100%) 1; }
+.top .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; padding-block: 14px; }
+.home { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font: 700 1.2rem var(--display); }
+.home:hover span { text-decoration: underline; }
+.mark { width: 36px; height: 36px; flex: none; }
+.back { font-family: var(--display); font-weight: 600; }
+
+main.wrap { padding-top: 36px; padding-bottom: 24px; }
+.label { font: 600 0.8rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+h1, h2 { font-family: var(--display); line-height: 1.15; }
+h1 { font-size: clamp(2.2rem, 7vw, 3.2rem); margin: 4px 0 12px; letter-spacing: -0.02em; }
+h2 { font-size: 1.5rem; margin: 36px 0 8px; color: var(--accent); }
+.what { font-size: 1.25rem; margin: 0 0 20px; }
+.open {
+  display: inline-block; background: var(--accent); color: var(--accent-ink); text-decoration: none;
+  font: 600 1.05rem var(--display); padding: 12px 20px; border-radius: 4px;
+}
+.open:hover { filter: brightness(1.1); }
+.steps, .tips { padding-left: 1.4em; margin: 0; }
+.steps li, .tips li { margin: 0 0 10px; padding-left: 4px; }
+.steps li::marker { font-family: var(--display); font-weight: 700; color: var(--rust); }
+
+.keys { border-collapse: collapse; width: 100%; background: var(--sheet); border: 1px solid var(--rule); }
+.keys th, .keys td { text-align: left; padding: 8px 12px; border-top: 1px solid var(--rule); vertical-align: top; }
+.keys th { width: 11rem; font-weight: 400; }
+kbd {
+  font: 600 0.9rem var(--display); background: var(--paper); border: 1px solid var(--rule);
+  border-bottom-width: 2px; border-radius: 4px; padding: 1px 7px; white-space: nowrap;
+}
+
+footer.wrap { border-top: 1px solid var(--rule); padding-top: 16px; padding-bottom: 40px; color: var(--muted); font-size: 1rem; }
+@media (max-width: 520px) { .keys th { width: 8rem; } }
