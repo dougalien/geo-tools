@@ -129,7 +129,7 @@
 <body>
 <header class="wrap">
   <h1 id="site-title">Earth Systems Arcade</h1>
-  <p class="byline" id="site-byline">Free geoscience apps and games by Dougalien Systems</p>
+  <p class="byline" id="site-byline">Free geoscience apps and games by <a href="https://dougalien.com" aria-label="Dougalien Systems home page (dougalien.com)">Dougalien Systems</a></p>
 </header>
 <main class="wrap">
   <div class="controls">
@@ -140,7 +140,7 @@
   <div class="grid" id="grid" aria-live="polite"></div>
 </main>
 <footer class="wrap">
-  Each app lists its data sources and citations inside the app. Free to use for teaching and learning.
+  Each app lists its data sources and citations inside the app. Free to use for teaching and learning. Made by <a href="https://dougalien.com" aria-label="Dougalien Systems home page (dougalien.com)">Dougalien Systems</a>.
 </footer>
 <script>
 (async function () {
@@ -156,7 +156,15 @@
     return;
   }
   document.getElementById("site-title").textContent = data.site.title;
-  document.getElementById("site-byline").textContent = data.site.byline;
+  // Keep "Dougalien Systems" in the byline as a link to dougalien.com.
+  const byline = document.getElementById("site-byline");
+  const [before, ...rest] = data.site.byline.split("Dougalien Systems");
+  if (rest.length) {
+    const home = byline.querySelector("a");
+    byline.replaceChildren(before, home, rest.join("Dougalien Systems"));
+  } else {
+    byline.textContent = data.site.byline;
+  }
 
   const tools = data.tools;
   const topics = [...new Set(tools.flatMap(t => t.topics || []))].sort();
