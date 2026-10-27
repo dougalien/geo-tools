@@ -164,7 +164,7 @@
       "name": "The Perfect Society",
       "kind": "app",
       "collection": "more",
-      "url": "https://dougaliensystems-society.netlify.app/",
+      "path": "apps/perfect-society/",
       "summary": "Answer 20 questions about how people should live together, then see which of 21 great political thinkers would recognize your society as their own.",
       "topics": [
         "Political philosophy",

@@ -3,7 +3,7 @@
 One free website that launches all of Dougalien Systems' geoscience apps and games, published with GitHub Pages at https://dougalien.github.io/geo-tools/.
 
 - **Browser games** (Lithonaut, Solar System Adventure) live in `games/` and run directly on this site.
-- **Browser apps** (3D Structural Geology Explorer) live in `apps/` and also run directly on this site.
+- **Browser apps** (3D Structural Geology Explorer, The Perfect Society) live in `apps/` and also run directly on this site. The Perfect Society is built on Douglas's computer (`Society\build_netlify.py`); copy the new `netlify\index.html` over `apps/perfect-society/index.html` to update it.
 - **Streamlit apps** (Quake, River Explorer, Resource Horizon, Hydrotherm, The Rock Cycle, TraceCode, Spectrum Earth, Paleo Diet Cruncher) each run on Streamlit Community Cloud from their own GitHub repo. The launcher links out to them.
 - Every tool has a short guide in `guides/<slug>/index.html`, linked from the **Guide** button beside **Open** here and on dougalien.com. Its short link is `https://<site>/<slug>/guide/`.
 - Every tool gets a short link, `https://<site>/<slug>/` (for example `https://dougalien.github.io/geo-tools/quake/`), to paste into a Canvas page. If an app's Streamlit address ever changes, update `tools.json` and the Canvas links keep working.
