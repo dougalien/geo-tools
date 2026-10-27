@@ -190,14 +190,14 @@
       "slug": "finite-deformable-geometry",
       "guide": "guides/finite-deformable-geometry/",
       "name": "Finite Deformable Geometry",
-      "kind": "book",
+      "kind": "streamlit",
       "collection": "more",
-      "url": "https://finite-deformable-geometry.dougbeetle.workers.dev/",
-      "summary": "A web book, plain-language guide and interactive model exploring a finite, deformable universe: redshift, gravity, shape and boundary transitions.",
+      "summary": "The geometry of the universe, by measurement only. Compare supernovae, galaxy rotation, cosmic clocks, shapes and orbits as registers: each measured value divided by its ideal.",
       "topics": [
-        "Cosmology"
+        "Cosmology",
+        "Measurement"
       ],
-      "status": "ready"
+      "status": "soon"
     },
     {
       "slug": "care-gap",
