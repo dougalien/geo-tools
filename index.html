@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Earth Systems Arcade</title>
-<meta name="description" content="Free geoscience apps and games by Dougalien Systems.">
+<meta name="description" content="Free geoscience apps and games, and more apps for teaching and learning, by Dougalien Systems.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Zilla+Slab:wght@600;700&display=swap" rel="stylesheet">
@@ -75,6 +75,9 @@
   }
   .filter[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; padding-bottom: 48px; }
+  .collection + .collection { border-top: 1px solid var(--line); padding-top: 28px; }
+  .collection h2.set { font-family: "Zilla Slab", Georgia, serif; font-size: 1.7rem; margin: 0; }
+  .collection .blurb { color: var(--muted); margin: 4px 0 16px; }
   .card {
     background: var(--card);
     border: 1px solid var(--line);
@@ -84,7 +87,7 @@
     flex-direction: column;
     gap: 10px;
   }
-  .card h2 { font-family: "Zilla Slab", Georgia, serif; font-size: 1.4rem; margin: 0; }
+  .card h3 { font-family: "Zilla Slab", Georgia, serif; font-size: 1.4rem; margin: 0; }
   .kind { font-size: 14px; color: var(--muted); }
   .summary { margin: 0; flex: 1; }
   .topics { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -137,7 +140,7 @@
     <input id="q" class="search" type="search" placeholder="Search tools">
   </div>
   <div class="filters" id="filters" role="group" aria-label="Filter by topic"></div>
-  <div class="grid" id="grid" aria-live="polite"></div>
+  <div id="grid" aria-live="polite"></div>
 </main>
 <footer class="wrap">
   Each app lists its data sources and citations inside the app. Free to use for teaching and learning. Made by <a href="https://dougalien.com" aria-label="Dougalien Systems home page (dougalien.com)">Dougalien Systems</a>.
@@ -202,14 +205,29 @@
       grid.innerHTML = '<p class="empty">No tools match.</p>';
       return;
     }
+    // One section per collection, in the order tools.json lists them; tools without one belong to the first.
+    const sets = data.site.collections || [{ id: "arcade", title: data.site.title }];
+    const boxes = {};
+    for (const c of sets) {
+      if (!shown.some(t => (t.collection || sets[0].id) === c.id)) continue;
+      const sec = document.createElement("section");
+      sec.className = "collection";
+      sec.setAttribute("aria-labelledby", "set-" + c.id);
+      sec.innerHTML = '<h2 class="set"></h2><p class="blurb"></p><div class="grid"></div>';
+      sec.querySelector("h2").id = "set-" + c.id;
+      sec.querySelector("h2").textContent = c.title;
+      sec.querySelector(".blurb").textContent = c.blurb || "";
+      grid.appendChild(sec);
+      boxes[c.id] = sec.querySelector(".grid");
+    }
     for (const t of shown) {
       const link = href(t);
       const card = document.createElement("article");
       card.className = "card";
       card.innerHTML = `
         <div>
-          <h2></h2>
-          <div class="kind">${{ game: "Browser game", app: "Browser app" }[t.kind] || "Web app"}</div>
+          <h3></h3>
+          <div class="kind">${{ game: "Browser game", app: "Browser app", book: "Web book" }[t.kind] || "Web app"}</div>
         </div>
         <p class="summary"></p>
         <div class="topics"></div>
@@ -219,7 +237,7 @@
           <a class="guide">Guide</a>
           <button class="copy" type="button">Copy link</button>
         </div>`;
-      card.querySelector("h2").textContent = t.name;
+      card.querySelector("h3").textContent = t.name;
       card.querySelector(".summary").textContent = t.summary;
       card.querySelector(".status").textContent = t.status === "ready" ? "Ready" : "Coming soon";
       const tp = card.querySelector(".topics");
@@ -251,7 +269,7 @@
         }
         setTimeout(() => (copy.textContent = "Copy link"), 2000);
       });
-      grid.appendChild(card);
+      boxes[t.collection || sets[0].id].appendChild(card);
     }
   }
   render();

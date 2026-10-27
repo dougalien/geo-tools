@@ -1,7 +1,19 @@
 {
   "site": {
     "title": "Earth Systems Arcade",
-    "byline": "Free geoscience apps and games by Dougalien Systems"
+    "byline": "Free geoscience apps and games by Dougalien Systems",
+    "collections": [
+      {
+        "id": "arcade",
+        "title": "Earth Systems Arcade",
+        "blurb": "Geoscience apps and games for the classroom."
+      },
+      {
+        "id": "more",
+        "title": "More Apps",
+        "blurb": "Apps for history, civics, society and big questions in science."
+      }
+    ]
   },
   "tools": [
     {
@@ -143,6 +155,60 @@
       "topics": [
         "Fossils",
         "Ancient diets"
+      ],
+      "status": "ready"
+    },
+    {
+      "slug": "perfect-society",
+      "guide": "guides/perfect-society/",
+      "name": "The Perfect Society",
+      "kind": "app",
+      "collection": "more",
+      "url": "https://dougaliensystems-society.netlify.app/",
+      "summary": "Answer 20 questions about how people should live together, then see which of 21 great political thinkers would recognize your society as their own.",
+      "topics": [
+        "Political philosophy",
+        "History"
+      ],
+      "status": "ready"
+    },
+    {
+      "slug": "constitution-explorer",
+      "guide": "guides/constitution-explorer/",
+      "name": "Constitution Explorer",
+      "kind": "streamlit",
+      "collection": "more",
+      "summary": "Ask questions in your own words and read the U.S. Constitution, landmark Supreme Court cases and the big debates, with primary sources for every answer.",
+      "topics": [
+        "Civics",
+        "U.S. Constitution"
+      ],
+      "status": "soon"
+    },
+    {
+      "slug": "finite-deformable-geometry",
+      "guide": "guides/finite-deformable-geometry/",
+      "name": "Finite Deformable Geometry",
+      "kind": "book",
+      "collection": "more",
+      "url": "https://finite-deformable-geometry.dougbeetle.workers.dev/",
+      "summary": "A web book, plain-language guide and interactive model exploring a finite, deformable universe: redshift, gravity, shape and boundary transitions.",
+      "topics": [
+        "Cosmology"
+      ],
+      "status": "ready"
+    },
+    {
+      "slug": "care-gap",
+      "guide": "guides/care-gap/",
+      "name": "The Care Gap",
+      "kind": "streamlit",
+      "collection": "more",
+      "url": "https://care-gap.streamlit.app/",
+      "summary": "See how many people aged 45 to 64 there are for each person aged 80 and over, in the nation or any state, and test ways to close the care gap.",
+      "topics": [
+        "Population",
+        "Aging and care"
       ],
       "status": "ready"
     }
