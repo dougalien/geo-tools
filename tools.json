@@ -192,7 +192,7 @@
       "name": "Finite Deformable Geometry",
       "kind": "streamlit",
       "collection": "more",
-      "summary": "The geometry of the universe, by measurement only. Compare supernovae, galaxy rotation, cosmic clocks, shapes and orbits as registers: each measured value divided by its ideal.",
+      "summary": "Explore the shape of the universe using only what reaches a telescope. Supernovae, galaxy rotation, cosmic clocks, orbits and craters are each shown as a ratio to their ideal, with no expanding space or dark matter assumed.",
       "topics": [
         "Cosmology",
         "Measurement"
