@@ -183,7 +183,8 @@
         "Civics",
         "U.S. Constitution"
       ],
-      "status": "soon"
+      "url": "https://constitution.streamlit.app/",
+      "status": "ready"
     },
     {
       "slug": "finite-deformable-geometry",
