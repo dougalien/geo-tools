@@ -113,7 +113,8 @@
     border-radius: 8px;
     font-weight: 700;
   }
-  .guide:hover { background: var(--chip); }
+  .guide:hover, .sources:hover { background: var(--chip); }
+  .sources { color: var(--accent); font-weight: 700; padding: 8px 4px; }
   .copy {
     background: transparent;
     border: 1px solid var(--line);
@@ -143,7 +144,7 @@
   <div id="grid" aria-live="polite"></div>
 </main>
 <footer class="wrap">
-  Each app lists its data sources and citations inside the app. Free to use for teaching and learning. Made by <a href="https://dougalien.com" aria-label="Dougalien Systems home page (dougalien.com)">Dougalien Systems</a>.
+  Where the data comes from: <a href="citations/">sources and citations for every app</a>. Free to use for teaching and learning. Made by <a href="https://dougalien.com" aria-label="Dougalien Systems home page (dougalien.com)">Dougalien Systems</a>.
 </footer>
 <script>
 (async function () {
@@ -235,6 +236,7 @@
         <div class="actions">
           <a class="open" target="_blank" rel="noopener">Open</a>
           <a class="guide">Guide</a>
+          <a class="sources">Sources</a>
           <button class="copy" type="button">Copy link</button>
         </div>`;
       card.querySelector("h3").textContent = t.name;
@@ -257,6 +259,9 @@
       } else {
         guide.remove();
       }
+      const src = card.querySelector(".sources");
+      src.href = "citations/#" + t.slug;
+      src.setAttribute("aria-label", "Data sources and citations for " + t.name);
       const copy = card.querySelector(".copy");
       copy.setAttribute("aria-label", "Copy link to " + t.name);
       if (!link) copy.disabled = true;

@@ -17,5 +17,7 @@ for (const t of tools) {
   if (t.guide) lines.push(`/${t.slug}/guide  /${t.guide}  301`);
 }
 
+lines.push("/sources  /citations/  301");
+
 writeFileSync("_redirects", lines.join("\n") + "\n");
 console.log(`Wrote _redirects with ${tools.length} tools.`);
