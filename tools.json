@@ -197,7 +197,8 @@
         "Cosmology",
         "Measurement"
       ],
-      "status": "soon"
+      "url": "https://doug-cosmology.streamlit.app/",
+      "status": "ready"
     },
     {
       "slug": "care-gap",
