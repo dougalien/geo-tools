@@ -92,6 +92,10 @@ details[open] summary { margin-bottom: 10px; }
 .info h4 { margin: 10px 0 3px; font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
 .info p { margin: 0 0 5px; font-size: 12.5px; line-height: 1.45; }
 .story { left: 50%; transform: translateX(-50%); bottom: 16px; width: min(640px, calc(100% - 32px)); padding: 12px 36px 12px 16px; font-size: 14px; line-height: 1.45; }
+.story-ctl { display: flex; align-items: center; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
+.story-ctl button { font-size: 13px; padding: 7px 14px; }
+.story-ctl button:disabled { opacity: 0.6; cursor: default; }
+.story-ctl label { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; cursor: pointer; }
 .story-step { font-family: var(--mono); font-size: 11px; color: var(--accent); margin-bottom: 3px; }
 .x { position: absolute; right: 6px; top: 4px; border: 0; padding: 2px 7px; font-size: 18px; line-height: 1; color: var(--muted); background: transparent; }
 @media (max-width: 760px) {
@@ -122,6 +126,10 @@ details[open] summary { margin-bottom: 10px; }
       <button type="button" class="x" id="storyX" aria-label="Close">×</button>
       <div class="story-step" id="storyStep"></div>
       <div id="storyText"></div>
+      <div class="story-ctl">
+        <button type="button" class="primary" id="storyGo">Continue ▶</button>
+        <label id="speakWrap"><input type="checkbox" id="speak"> Read aloud</label>
+      </div>
     </div>
     <div class="viewbtns">
       <button id="vmap" type="button" class="primary" aria-pressed="true">Map: on</button>
@@ -222,6 +230,7 @@ details[open] summary { margin-bottom: 10px; }
         <div><svg viewBox="0 0 40 16" width="40" height="16"><path d="M2 8H38" stroke="#d0605a" stroke-width="2"/><path d="M20 8V2M20 8V14" stroke="#d0605a" stroke-width="1.8"/><path d="M17 3L23 3L20 0Z M17 13L23 13L20 16Z" fill="#d0605a"/></svg>Anticline hinge</div>
         <div><svg viewBox="0 0 40 16" width="40" height="16"><path d="M2 8H38" stroke="#6f8fd8" stroke-width="2"/><path d="M20 1V7M20 9V15" stroke="#6f8fd8" stroke-width="1.8"/><path d="M17 5L23 5L20 8Z M17 11L23 11L20 8Z" fill="#6f8fd8"/></svg>Syncline hinge</div>
         <div><svg viewBox="0 0 40 16" width="40" height="16"><path d="M2 8H38" stroke="currentColor" stroke-width="1"/></svg>Contact</div>
+        <div><svg viewBox="0 0 40 16" width="40" height="16"><rect x="2" y="1" width="36" height="14" rx="4" fill="#1B1E20" stroke="#D6B27C" stroke-width="1.5"/><text x="20" y="12" text-anchor="middle" font-size="10" font-weight="700" fill="#F0D6A8">T1</text></svg>Fault labels: T1, T2… thrusts in the order they formed; N1, N2… normal faults</div>
       </div>
     </section>
 
@@ -669,6 +678,7 @@ function update() {
   updateReadouts(ts, ns);
   if (typeof placeMap === "function") { placeMap(); requestMap(); }
   if (typeof showPick === "function" && pick) showPick();
+  if (typeof updateFaultLabels === "function") updateFaultLabels();
 }
 
 // ------------------------------------------------------------------- UI
@@ -700,13 +710,13 @@ function updateReadouts(ts, ns) {
   if (active) stage = `Compression: ${active} of ${THRUSTS.length} thrust${THRUSTS.length > 1 ? "s" : ""} active`;
   if (S.ext > 0) stage += (active ? " · " : "") + `Extension: ${NORMALS.length} normal fault${NORMALS.length > 1 ? "s" : ""}`;
   $("stage").textContent = stage;
-  $("shortHint").textContent = active ? `Thrust ${active} is moving now; earlier thrust sheets ride piggyback on it.` : "Thrusts form one after another, toward the foreland (east).";
+  $("shortHint").textContent = active ? `Thrust T${active} is moving now; earlier thrust sheets ride piggyback on it.` : "Thrusts form one after another, toward the foreland (east).";
 }
 
 let pending = false;
 function schedule() { if (!pending) { pending = true; requestAnimationFrame(() => { pending = false; update(); }); } }
 function bind(id, key, parse, rebuild) {
-  $(id).addEventListener("input", e => { if (!playing) playT = null; S[key] = parse(e.target.value); if (rebuild) buildFaults(); schedule(); });
+  $(id).addEventListener("input", e => { if (storyOn) endStory(); playT = null; S[key] = parse(e.target.value); if (rebuild) buildFaults(); schedule(); });
 }
 bind("short", "short", parseFloat); bind("ext", "ext", parseFloat); bind("level", "level", parseFloat);
 bind("relief", "relief", parseFloat); bind("slice", "slice", parseFloat); bind("ve", "ve", parseFloat);
@@ -718,65 +728,77 @@ for (const id of ["plutonT", "sillT", "dikeT"]) { $(id).innerHTML = WHEN.map((w,
 for (const id of ["plutonTop", "plutonR", "sillHost", "nDike", "dikeTrend"]) bind(id, id, v => parseInt(v));
 $("v3d").addEventListener("click", view3d); $("vtop").addEventListener("click", viewMap);
 $("vmap").addEventListener("click", () => { S.map = !S.map; $("vmap").textContent = S.map ? "Map: on" : "Map: off"; $("vmap").classList.toggle("primary", S.map); $("vmap").setAttribute("aria-pressed", S.map); placeMap(); requestMap(); });
-$("reset").addEventListener("click", () => { stopPlay(false); playT = null; $("story").hidden = true; S.short = 0; S.ext = 0; $("short").value = 0; $("ext").value = 0; schedule(); });
+$("reset").addEventListener("click", () => { endStory(); S.short = 0; S.ext = 0; $("short").value = 0; $("ext").value = 0; schedule(); });
 
-// Play history: a timeline of beats, each with a short caption about what to watch.
-let playing = null, beat = 0, beatT = 0, BEATS = [];
+// Play history: a story in steps. Each step shows its caption and waits; Continue plays that
+// step's deformation, then the next caption appears and waits again.
+let playing = null, storyOn = false, beat = 0, BEATS = [];
 const WHEN_TXT = { 1: "before thrusting", 2: "after thrusting but before extension", 3: "after extension, the youngest event" };
 const IG_NAME = { plutonT: "pluton", sillT: "sill", dikeT: "dikes" };
 function igList(stage) { const a = Object.keys(IG_NAME).filter(k => S[k] === stage).map(k => IG_NAME[k]); return a.length > 1 ? a.slice(0, -1).join(", ") + " and " + a[a.length - 1] : a[0] || ""; }
 function listJoin(a) { return a.length > 1 ? a.slice(0, -1).join(", ") + " and " + a[a.length - 1] : String(a[0]); }
 function km(v) { return (v / 1000).toFixed(1); }
 function buildBeats() {
-  const pre = igList(1), mid = igList(2), late = igList(3);
-  const thrustCap = () => {
-    const k = TS.filter(s => s > 0).length || 1;
-    return [
-      "Thrust 1 breaks along the décollement, a weak shale, then ramps up through the stiff carbonates. Watch the hanging wall bend as it climbs the ramp: a fault-bend fold.",
-      "Thrust 2 breaks farther east, in the footwall of Thrust 1. The older sheet and its fold ride piggyback, so the old fault gets folded and carried.",
-      "Look across each thrust trace on the map: older rocks now sit on younger, and the same units repeat from west to east.",
-      "Slip dies out to the north and south, so faults end inside the map and folds plunge. Look for outcrop bands that curve and close near the fault tips.",
-      "Each new thrust adds to the stack. Total shortening so far: " + km(S.short * MAXSHORT) + " km." ][Math.min(k, 5) - 1];
-  };
-  BEATS = [
-    { d: 5, t0: 0, t1: 0, cap: () => "A layer cake: about 2.8 km of Cambrian to Cretaceous strata lying flat on Archean gneiss. Flat beds make contacts follow the topography on the map." +
-      (pre ? ` The ${pre} ${pre.includes("and") || pre === "dikes" ? "are" : "is"} already in place, so watch the faults carry and offset ${pre.includes("and") || pre === "dikes" ? "them" : "it"}.` : "") },
-    { d: 22, t0: 0, t1: 1, cap: thrustCap },
-    { d: 5, t0: 1, t1: 1, cap: () => mid ? `Thrusting has stopped. Now the ${mid} intrude${mid === "pluton" || mid === "sill" ? "s" : ""}. Being younger, ${mid === "pluton" || mid === "sill" ? "it cuts" : "they cut"} straight across the thrusts and folds.`
-      : `Thrusting has stopped after ${km(MAXSHORT)} km of shortening. On the map, which units repeat, and where do the folds plunge?` },
-    { d: 6, t0: 1, t1: 1.5, cap: () => "Stretching begins: listric normal faults cut the thrust stack. Their hanging walls slide down the curved faults and tilt back toward them (rollover)." },
-    { d: 6, t0: 1.5, t1: 2, cap: () => "Across a normal fault, younger rocks drop against older ones: the opposite of a thrust. At the surface part of the section goes missing instead of repeating." },
-    { d: 7, t0: 2, t1: 2, cap: () => (late ? `Last, the ${late} intrude${late === "pluton" || late === "sill" ? "s" : ""} and cut${late === "pluton" || late === "sill" ? "s" : ""} straight across every fault and fold. ` : "") +
-      "Your turn: slide the land surface down to see deeper levels, or click any spot on the map to ask what is happening there." },
-  ];
+  const pre = igList(1), mid = igList(2), late = igList(3), plural = s => s.includes("and") || s === "dikes";
+  const THRUST_CAP = [
+    "Thrust T1 breaks along the décollement, a weak shale, then ramps up through the stiff carbonates. Watch the hanging wall bend as it climbs the ramp: a fault-bend fold.",
+    "Thrust T2 breaks farther east, in the footwall of T1. The older sheet and its fold ride piggyback on T2, so the old fault gets folded and carried.",
+    "Thrust T3 breaks still farther east. Watch the map: across each thrust trace older rocks sit on younger, and the same units repeat from west to east.",
+    "Thrust T4 forms at the front of the belt. Slip dies out to the north and south, so faults end inside the map and folds plunge. Look for outcrop bands that curve and close near the fault tips.",
+    "Thrust T5 adds one more sheet to the stack. Every older thrust above it is carried farther east." ];
+  BEATS = [{ t0: 0, t1: 0, cap: "A layer cake: about 2.8 km of Cambrian to Cretaceous strata lying flat on Archean gneiss. Flat beds make contacts follow the topography on the map." +
+    (pre ? ` The ${pre} ${plural(pre) ? "are" : "is"} already in place, so watch the faults carry and offset ${plural(pre) ? "them" : "it"}.` : "") }];
+  let cum = 0;
+  THRUSTS.forEach((t, k) => { const a = cum / MAXSHORT; cum += t.max; BEATS.push({ t0: a, t1: cum / MAXSHORT, d: 2.5 + 5 * t.max / MAXSHORT * THRUSTS.length / 2, cap: THRUST_CAP[Math.min(k, 4)] }); });
+  BEATS.push({ t0: 1, t1: 1, cap: mid ? `Thrusting has stopped after ${km(MAXSHORT)} km of shortening. Now the ${mid} intrude${plural(mid) ? "" : "s"}. Being younger, ${plural(mid) ? "they cut" : "it cuts"} straight across the thrusts and folds.`
+    : `Thrusting has stopped after ${km(MAXSHORT)} km of shortening. On the map, which units repeat, and where do the folds plunge?` });
+  const nn = NORMALS.length > 1 ? `${listJoin(NORMALS.map((n, i) => "N" + (i + 1)))} move together` : "N1 moves";
+  BEATS.push({ t0: 1, t1: 1.5, d: 4, cap: `Stretching begins. Listric normal faults ${nn}, cutting the thrust stack. Their hanging walls slide down the curved faults and tilt back toward them (rollover).` });
+  BEATS.push({ t0: 1.5, t1: 2, d: 4, cap: "Across a normal fault, younger rocks drop against older ones: the opposite of a thrust. At the surface part of the section goes missing instead of repeating." });
+  BEATS.push({ t0: 2, t1: 2, cap: (late ? `Last, the ${late} intrude${plural(late) ? "" : "s"} and cut${plural(late) ? "" : "s"} straight across every fault and fold. ` : "") +
+    "Your turn: slide the land surface down to see deeper levels, or click any spot on the map to ask what is happening there." });
 }
-function showStory() {
-  const b = BEATS[beat]; if (!b) return;
-  $("story").hidden = false; $("storyStep").textContent = `${beat + 1} of ${BEATS.length}`;
-  const txt = b.cap(); if ($("storyText").textContent !== txt) $("storyText").textContent = txt;
+function setT(t) { playT = t; S.short = Math.min(1, t); S.ext = Math.max(0, Math.min(1, t - 1)); $("short").value = S.short; $("ext").value = S.ext; update(); }
+function speak(txt) {
+  if (!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel(); if ($("speak").checked) speechSynthesis.speak(new SpeechSynthesisUtterance(txt));
 }
-function stopPlay(done) { if (playing) cancelAnimationFrame(playing); playing = null; $("play").textContent = "▶ Play history";
-  if (done) { playT = null; update(); } }
-$("storyX").addEventListener("click", () => { $("story").hidden = true; });
-$("play").addEventListener("click", () => {
-  if (playing) { stopPlay(false); return; }
-  buildBeats();
-  const tNow = S.short + S.ext;
-  if (playT === null || Math.abs(playT - tNow) > 1e-3) { beat = 0; beatT = 0; } // resume a paused run, otherwise start from the layer cake
-  $("play").textContent = "❚❚ Pause";
+function showBeat() {
+  const b = BEATS[beat], last = beat === BEATS.length - 1;
+  $("story").hidden = false; $("storyStep").textContent = `Step ${beat + 1} of ${BEATS.length}`; $("storyText").textContent = b.cap;
+  const go = $("storyGo"); go.disabled = false; go.textContent = last ? "Finish" : b.t1 > b.t0 ? "Continue: watch it happen ▶" : "Continue ▶";
+  go.focus({ preventScroll: true }); speak(b.cap);
+}
+function nextBeat() { if (beat >= BEATS.length - 1) { endStory(); return; } beat++; showBeat(); }
+function storyGo() {
+  const b = BEATS[beat]; if (!storyOn || playing) return;
+  if (!(b.t1 > b.t0)) { nextBeat(); return; }
+  const go = $("storyGo"); go.disabled = true; go.textContent = "Moving…";
   const speed = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 2 : 1;
-  let last = performance.now();
+  let el = 0, last = performance.now();
   const step = now => {
-    const dt = Math.min(0.25, (now - last) / 1000) * speed; last = now; beatT += dt;
-    while (beat < BEATS.length && beatT >= BEATS[beat].d) { beatT -= BEATS[beat].d; beat++; }
-    if (beat >= BEATS.length) { beat = BEATS.length - 1; beatT = BEATS[beat].d; showStory(); stopPlay(true); return; }
-    const b = BEATS[beat], t = b.t0 + (b.t1 - b.t0) * Math.min(1, beatT / b.d);
-    playT = t; S.short = Math.min(1, t); S.ext = Math.max(0, Math.min(1, t - 1));
-    $("short").value = S.short; $("ext").value = S.ext; update(); showStory();
+    el += Math.min(0.25, (now - last) / 1000) * speed; last = now;
+    setT(b.t0 + (b.t1 - b.t0) * Math.min(1, el / b.d));
+    if (el >= b.d) { playing = null; nextBeat(); return; }
     playing = requestAnimationFrame(step);
   };
   playing = requestAnimationFrame(step);
+}
+function endStory() {
+  if (playing) cancelAnimationFrame(playing); playing = null;
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+  const was = storyOn; storyOn = false; playT = null; $("story").hidden = true; $("play").textContent = "▶ Play history";
+  if (was) update();
+}
+$("play").addEventListener("click", () => {
+  if (storyOn) { endStory(); return; }
+  buildBeats(); storyOn = true; beat = 0; $("play").textContent = "■ Stop story"; setT(0); showBeat();
 });
+$("storyGo").addEventListener("click", storyGo);
+$("storyX").addEventListener("click", endStory);
+try { $("speak").checked = localStorage.getItem("sgeSpeak") === "1"; } catch (e) {}
+$("speak").addEventListener("change", () => { try { localStorage.setItem("sgeSpeak", $("speak").checked ? "1" : "0"); } catch (e) {} if (storyOn) speak(BEATS[beat].cap); });
+if (!("speechSynthesis" in window)) $("speakWrap").hidden = true;
 
 // ------------------------------------------------------------- map view
 // A printed-style geologic map drawn on demand from the current block: unit colors, contacts,
@@ -958,10 +980,11 @@ function drawMapTexture() {
   }
 
   // Faults with symbols on the hanging wall
+  const traces = [];
   const sampleF = (F, gi, gj) => { const i = Math.max(0, Math.min(nx - 1, Math.round(gi))), j = Math.max(0, Math.min(ny - 1, Math.round(gj))); return F[j * nx + i]; };
   for (const f of active) {
     const lines = chain(contourSegs(FD[f], nx, ny, 0)).filter(l => l.length > 3);
-    stroke(lines, 4.2, ink);
+    stroke(lines, 4.2, ink); if (lines.length) traces.push([f, lines]);
     const thrust = f < 5;
     for (const l of lines) {
       const pts = l.map(toPx); let acc = 0, next = 24;
@@ -980,6 +1003,14 @@ function drawMapTexture() {
         acc += seg;
       }
     }
+  }
+  // Fault labels (T1, T2… N1…) at the middle of each fault's longest trace
+  g.font = "700 22px 'Familjen Grotesk', Archivo, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+  for (const [f, lines] of traces) {
+    const l = lines.reduce((a, b) => b.length > a.length ? b : a), [px, py] = toPx(l[Math.floor(l.length * 0.45)]);
+    const w = 44, h = 28, bx = Math.min(TW - w - 6, Math.max(6, px + 14)), by = Math.min(TH - h - 6, Math.max(6, py - h / 2));
+    g.fillStyle = "#1B1E20"; g.fillRect(bx, by, w, h); g.strokeStyle = f < 5 ? "#D6B27C" : "#6fb7c9"; g.lineWidth = 2; g.strokeRect(bx, by, w, h);
+    g.fillStyle = f < 5 ? "#F0D6A8" : "#9fd6e4"; g.fillText(faultName(f), bx + w / 2, by + h / 2 + 1);
   }
   // Unit labels in broad outcrops
   g.font = "700 22px Archivo, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
@@ -1005,6 +1036,44 @@ function drawMapTexture() {
   g.font = "600 15px 'Familjen Grotesk', Archivo, sans-serif"; g.textAlign = "right"; g.lineWidth = 4; g.strokeStyle = paper;
   g.strokeText("3D Structural Geology Explorer · Dougalien Systems", TW - 20, TH - 20); g.fillStyle = ink; g.fillText("3D Structural Geology Explorer · Dougalien Systems", TW - 20, TH - 20);
   mapTex.needsUpdate = true;
+}
+
+// ------------------------------------------------------------ fault labels
+// T1, T2… thrusts in the order they formed; N1, N2… normal faults. Each label sits where its
+// fault cuts the front (south) face of the block, or on the land surface if it misses that face.
+const FLABEL = [];
+function faultName(f) { return f < 5 ? "T" + (f + 1) : "N" + (f - 4); }
+function labelSprite(f) {
+  if (FLABEL[f]) return FLABEL[f];
+  const c = document.createElement("canvas"); c.width = 128; c.height = 64; const g = c.getContext("2d");
+  g.fillStyle = "rgba(27,30,32,0.92)"; g.strokeStyle = f < 5 ? "#D6B27C" : "#6fb7c9"; g.lineWidth = 4;
+  g.beginPath(); g.roundRect ? g.roundRect(4, 4, 120, 56, 12) : g.rect(4, 4, 120, 56); g.fill(); g.stroke();
+  g.fillStyle = f < 5 ? "#F0D6A8" : "#9fd6e4"; g.font = "700 38px 'Familjen Grotesk', Archivo, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(faultName(f), 64, 34);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true }));
+  s.scale.set(0.56, 0.28, 1); s.renderOrder = 5; group.add(s); FLABEL[f] = s; return s;
+}
+function crossing(g, nu, rows, f) { // first edge along a row where fault f changes side
+  const A = f < 4 ? g.attributes.aF0.array : g.attributes.aF1.array, q = f & 3;
+  for (const r of rows) for (let c = 0; c < nu - 1; c++) {
+    const k = r * nu + c, a = A[4 * k + q], b = A[4 * (k + 1) + q];
+    if (a < 1e5 && b < 1e5 && (a > 0) !== (b > 0)) { const t = a / (a - b), W = g.W; return [0, 1, 2].map(i => W[3 * k + i] + (W[3 * (k + 1) + i] - W[3 * k + i]) * t); }
+  }
+  return null;
+}
+function updateFaultLabels() {
+  const rows = []; for (let r = NZ - 9; r >= NZ - 50; r -= 2) rows.push(r);
+  const topRows = []; for (let d = 0; d < NY / 2; d += 3) topRows.push(Math.floor(NY / 2) + d, Math.floor(NY / 2) - d - 1);
+  const placed = [], clear = q => q && placed.every(o => Math.hypot(sx(q[0]) - sx(o[0]), (q[2] - o[2]) / 1000 * S.ve, sz(q[1]) - sz(o[1])) > 0.42);
+  const first = (g, rs, f) => { let any = null; for (const r of rs) { const q = crossing(g, g.nu, [r], f); if (q && !any) any = q; if (clear(q)) return q; } return any; };
+  for (let f = 0; f < NF; f++) {
+    const on = f < 5 ? TS[f] > 0 : NS[f - 5] > 0;
+    let p = on ? first(walls.S, rows, f) : null, front = !!p;
+    if (on && !p) p = first(topGeom, topRows.filter(j => j >= 0 && j < NY), f);
+    if (p) placed.push(p);
+    if (!p) { if (FLABEL[f]) FLABEL[f].visible = false; continue; }
+    const s = labelSprite(f); s.visible = true;
+    s.position.set(sx(p[0]), p[2] / 1000 * S.ve + (front ? 0 : 0.2), sz(p[1]) + (front ? 0.1 : 0));
+  }
 }
 
 // ------------------------------------------------------- what's happening here?
@@ -1059,14 +1128,14 @@ function explain(x, y, z, surface) {
   const st = [], act = THRUSTS.map((t, i) => TS[i] > 0 ? i : -1).filter(i => i >= 0), above = act.filter(i => d[i] > 0);
   if (above.length) {
     const k = Math.min(...above);
-    st.push(`This is the thrust sheet above Thrust ${k + 1}` + (above.length > 1 ? `, which in turn rides on Thrust${above.length > 2 ? "s" : ""} ${listJoin(above.filter(i => i !== k).map(i => i + 1))}.` : "."));
+    st.push(`This is the thrust sheet above thrust T${k + 1}` + (above.length > 1 ? `, which in turn rides on ${listJoin(above.filter(i => i !== k).map(i => "T" + (i + 1)))}.` : "."));
     if (att && att.dip > 8) st.push(att.east > 0.3 ? "Beds dipping east, toward the foreland, mark the forelimb of the fold that grew as this sheet climbed its ramp." : att.east < -0.3 ? "Beds dipping west mark the backlimb: they tilted as the sheet rode up onto the ramp." : "");
   } else if (act.length) st.push("Below every thrust: this rock stayed where it was deposited while the sheets above moved east.");
-  NORMALS.forEach((n, i) => { if (NS[i] > 0 && d[5 + i] > 0 && n.local(x, y)[0] > -2500) st.push(`It is in the hanging wall of Normal fault ${i + 1}, so it slid down to the ${n.strike > 300 ? "east" : "west"} during stretching.`); });
+  NORMALS.forEach((n, i) => { if (NS[i] > 0 && d[5 + i] > 0 && n.local(x, y)[0] > -2500) st.push(`It is in the hanging wall of normal fault N${i + 1}, so it slid down to the ${n.strike > 300 ? "east" : "west"} during stretching.`); });
   const moved = Math.hypot(x - q[0], y - q[1]), up = z - z0;
   if (moved > 60 || Math.abs(up) > 30) st.push(`Since deposition it has moved ${km(moved)} km ${compass(Math.atan2(x - q[0], y - q[1]) * 180 / Math.PI)} and ${up >= 0 ? "risen" : "dropped"} ${Math.abs(Math.round(up))} m.`);
   let nf = null; for (let f = 0; f < NF; f++) if (d[f] < 1e5 && (!nf || Math.abs(d[f]) < Math.abs(nf.d))) nf = { f, d: d[f] };
-  if (nf && Math.abs(nf.d) < 500) st.push(`${nf.f < 5 ? "Thrust " + (nf.f + 1) : "Normal fault " + (nf.f - 4)} is about ${Math.round(Math.abs(nf.d))} m ${nf.d > 0 ? "below" : "above"} this point.` +
+  if (nf && Math.abs(nf.d) < 500) st.push(`${nf.f < 5 ? "Thrust T" + (nf.f + 1) : "Normal fault N" + (nf.f - 4)} is about ${Math.round(Math.abs(nf.d))} m ${nf.d > 0 ? "below" : "above"} this point.` +
     (surface ? (nf.f < 5 ? " Across its trace older rocks sit on younger, so units repeat." : " Across its trace younger rocks are dropped against older, so part of the section is missing.") : ""));
   sec("Structure", st.filter(Boolean));
   // why the outcrop pattern looks like this
