@@ -120,6 +120,18 @@
       "status": "ready"
     },
     {
+      "slug": "power",
+      "guide": "guides/power/",
+      "name": "Power",
+      "kind": "streamlit",
+      "summary": "How much land would solar, wind, nuclear, hydro or geothermal need to replace U.S. petroleum? Check the power density of each source and see the answer as a share of the country.",
+      "topics": [
+        "Energy",
+        "Sustainability"
+      ],
+      "status": "not online yet"
+    },
+    {
       "slug": "tracecode",
       "guide": "guides/tracecode/",
       "name": "TraceCode",
